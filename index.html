@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Deudas TAG - Autopistas de Chile</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        tagBlue: '#003399',
+                        tagRed: '#DA291C',
+                        tagDark: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Diseño de Placa Patente Chilena Impecable */
+        .patente-chile {
+            background: #ffffff;
+            border: 2px solid #0f172a;
+            border-radius: 6px;
+            box-shadow: inset 0 0 0 1px #cbd5e1, 0 2px 4px rgba(0,0,0,0.08);
+            font-family: monospace;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #0f172a;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 10px 4px 10px;
+            line-height: 1;
+            font-size: 0.95rem;
+            user-select: none;
+            min-width: 90px;
+        }
+        .patente-chile::before {
+            content: "CHILE";
+            position: absolute;
+            top: 2px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.45rem;
+            letter-spacing: 1.5px;
+            color: #64748b;
+            font-weight: 800;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+        }
+
+        /* Notificación Toast Horizontal */
+        #toast-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Modales */
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Bloqueo de scroll cuando hay modal abierto */
+        body.modal-open {
+            overflow: hidden !important;
+            touch-action: none;
+        }
+
+        /* Animación de deslizamiento al cambiar de mes */
+        @keyframes slideLeft {
+            0% { transform: translateX(24px); opacity: 0.4; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideRight {
+            0% { transform: translateX(-24px); opacity: 0.4; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-left {
+            animation: slideLeft 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-slide-right {
+            animation: slideRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between pb-32 bg-slate-50 relative">
+
+    <!-- HEADER PRINCIPAL -->
+    <header class="bg-gradient-to-r from-tagBlue via-blue-900 to-tagDark text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 p-2 rounded-xl backdrop-blur-sm border border-white/20">
+                    <i class="fa-solid fa-road text-tagRed text-lg mr-1"></i>
+                    <i class="fa-solid fa-car text-white text-base"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight flex items-center gap-2">
+                        Control TAG Chile
+                    </h1>
+                    <p class="text-[10px] text-blue-200">Deudores y Autopistas</p>
+                </div>
+            </div>
+            
+            <!-- BADGE DE MES ACTUAL UBICADO JUNTO AL TÍTULO EN LA CABECERA AZUL -->
+            <div class="flex items-center gap-2">
+                <button onclick="openModal('modal-supabase')" id="supabase-status-btn" class="bg-slate-900/80 hover:bg-slate-900 text-white px-2.5 py-1.5 rounded-xl shadow-inner border border-white/10 flex items-center gap-1.5 transition text-xs" title="Configurar Supabase">
+                    <i class="fa-solid fa-cloud text-slate-400 text-xs transition-colors" id="supabase-icon"></i>
+                    <span id="supabase-status-text" class="hidden sm:inline text-[10px] text-slate-300 font-medium">Sin configurar</span>
+                </button>
+
+                <div onclick="openModal('modal-year-grid')" class="bg-slate-900/80 hover:bg-slate-900 text-white px-3 py-1.5 rounded-xl shadow-inner border border-white/10 flex items-center gap-2 cursor-pointer transition">
+                    <i class="fa-solid fa-calendar-check text-tagRed text-xs"></i>
+                    <span id="floating-month-tag" class="text-xs font-bold capitalize">--</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main id="main-swipe-area" class="max-w-4xl mx-auto px-4 py-4 w-full flex-1 touch-pan-y">
+        
+        <!-- WRAPPER PARA ANIMACIÓN SWIPE LIMPIO Y COMPLETO -->
+        <div id="swipe-animated-wrapper" class="w-full">
+            <!-- SELECTOR DE MES Y AÑO -->
+            <section class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 mb-4">
+                <div class="flex items-center justify-between">
+                    <button onclick="changeMonth(-1)" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" title="Mes Anterior">
+                        <i class="fa-solid fa-chevron-left text-sm"></i>
+                    </button>
+                    <div class="text-center cursor-pointer" onclick="openModal('modal-year-grid')">
+                        <div class="flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-calendar-days text-tagBlue text-sm"></i>
+                            <span id="current-month-display" class="font-extrabold text-slate-800 text-base capitalize">--</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-medium">Toca para desplegar meses</p>
+                    </div>
+                    <button onclick="changeMonth(1)" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" title="Mes Siguiente">
+                        <i class="fa-solid fa-chevron-right text-sm"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- RESUMEN DE MÉTRICAS -->
+            <section class="grid grid-cols-2 gap-3 mb-5">
+                <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Deuda Acumulada</span>
+                    <div class="mt-1 flex items-baseline justify-between">
+                        <span id="stat-total-debt" class="text-lg md:text-2xl font-extrabold text-tagRed">$0</span>
+                        <i class="fa-solid fa-calculator text-slate-300 text-base"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Mayor Concentración</span>
+                    <div class="mt-1 flex items-baseline justify-between">
+                        <span id="stat-top-highway" class="text-xs md:text-sm font-bold text-slate-800 truncate">Sin registros</span>
+                        <i class="fa-solid fa-chart-pie text-slate-300 text-base"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LISTA DE DEUDORES -->
+            <section class="mb-24">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-users text-tagBlue"></i> Deudores Registrados
+                    </h2>
+                    <span id="debtor-count" class="text-xs bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full font-bold">0</span>
+                </div>
+
+                <div id="debtors-container" class="space-y-3">
+                    <!-- Se renderiza dinámicamente con JavaScript -->
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- MENÚ NAVEGACIÓN INFERIOR -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 shadow-lg px-2 py-2">
+        <div class="max-w-md mx-auto grid grid-cols-6 gap-1">
+            <button onclick="goToLatestMonthWithData()" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[10px] transition-all active:scale-95 border border-slate-200" title="Ir al último mes con datos">
+                <i class="fa-solid fa-house text-xs text-tagBlue"></i>
+                <span class="truncate mt-0.5">Home</span>
+            </button>
+
+            <button onclick="openModal('modal-year-grid')" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[10px] transition-all active:scale-95 border border-slate-200" title="Ver meses del año">
+                <i class="fa-solid fa-calendar-days text-xs text-slate-600"></i>
+                <span class="truncate mt-0.5">Meses</span>
+            </button>
+
+            <button onclick="openModal('modal-supabase')" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-800 text-white font-medium text-[10px] hover:bg-slate-900 transition-all active:scale-95 shadow-2xs" title="Sincronizar con Supabase">
+                <i class="fa-solid fa-cloud-arrow-up text-xs text-emerald-400"></i>
+                <span id="bottom-nube-text" class="truncate mt-0.5">Nube</span>
+            </button>
+
+            <button onclick="exportDataToJSON()" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-700 text-white font-medium text-[10px] hover:bg-slate-800 transition-all active:scale-95 shadow-2xs" title="Descargar copia de seguridad en JSON">
+                <i class="fa-solid fa-file-arrow-down text-xs text-green-300"></i>
+                <span class="truncate mt-0.5">Guardar</span>
+            </button>
+
+            <button onclick="triggerJSONImport()" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-700 text-white font-medium text-[10px] hover:bg-slate-800 transition-all active:scale-95 shadow-2xs" title="Cargar datos desde un archivo JSON">
+                <i class="fa-solid fa-file-arrow-up text-xs text-blue-300"></i>
+                <span class="truncate mt-0.5">Cargar</span>
+            </button>
+            <input type="file" id="json-file-input" accept=".json,application/json" onchange="importDataFromJSON(event)" class="hidden">
+
+            <button onclick="openModal('modal-trash')" class="relative flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-100 text-slate-700 font-medium text-[10px] hover:bg-slate-200 transition-all active:scale-95 border border-slate-200">
+                <i class="fa-solid fa-trash-can text-xs text-slate-600"></i>
+                <span class="truncate mt-0.5">Papelera</span>
+                <span id="trash-badge" class="hidden absolute -top-1 -right-1 bg-tagRed text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold border-2 border-white">
+                    0
+                </span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MODAL: VER MESES DEL AÑO (FLOTANTE CERCA DEL MENÚ INFERIOR) -->
+    <div id="modal-year-grid" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-20 sm:pb-3 hidden">
+        <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-year-grid')"></div>
+        <div class="relative bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden z-10 border border-slate-100">
+            <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+                <h3 class="font-bold text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-days text-tagBlue"></i> Meses del <span id="grid-year-title">2026</span>
+                </h3>
+                <button onclick="closeModal('modal-year-grid')" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-4 bg-slate-50">
+                <div id="months-grid-container" class="grid grid-cols-3 gap-2">
+                    <!-- Cuadrícula de 12 meses renderizada por JS -->
+                </div>
+            </div>
+
+            <div class="p-3 bg-white border-t border-slate-100 text-center">
+                <p class="text-[10px] text-slate-400">Verde: Meses con registros de cobros</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CARGAR / EDITAR DEUDA -->
+    <div id="modal-add-debt" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-add-debt')"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden z-10 border border-slate-100">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 id="modal-debt-title" class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-receipt text-tagBlue"></i> Cargar Nueva Deuda
+                </h3>
+                <button onclick="closeModal('modal-add-debt')" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="form-add-debt" onsubmit="saveDebt(event)" class="p-6 space-y-4">
+                <input type="hidden" id="debt-edit-id" value="">
+                <input type="hidden" id="debt-debtor-id" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Autopista *</label>
+                    <select id="debt-highway" required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-sm font-medium bg-white">
+                        <option value="Autopista Central">Autopista Central</option>
+                        <option value="Costanera Norte">Costanera Norte</option>
+                        <option value="Vespucio Sur">Vespucio Sur</option>
+                        <option value="Vespucio Norte">Vespucio Norte</option>
+                        <option value="Autopista Nororiente">Autopista Nororiente</option>
+                        <option value="AVO (Américo Vespucio Oriente)">AVO (Américo Vespucio Oriente)</option>
+                        <option value="Survías (Ruta 5 Sur)">Survías (Ruta 5 Sur)</option>
+                        <option value="Ruta del Maipo">Ruta del Maipo</option>
+                        <option value="Ruta 68 (Santiago - Valparaíso)">Ruta 68 (Santiago - Valparaíso)</option>
+                        <option value="Pase Diario Unificado">Pase Diario Unificado</option>
+                        <option value="Otra Autopista / Peaje">Otra Autopista / Peaje</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Monto ($ CLP) *</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
+                        <input type="number" id="debt-amount" required min="1" step="any" placeholder="Ejemplo: 15450" class="w-full pl-7 pr-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-sm font-semibold">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">
+                        Imagen o Comprobante (Opcional) 
+                        <span class="text-[10px] text-tagBlue font-normal block">puedes pegar captura con Ctrl+V</span>
+                    </label>
+                    <input type="file" id="debt-image-file" accept="image/*" onchange="handleImageFileSelect(event)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-tagBlue file:text-white hover:file:bg-blue-800 cursor-pointer">
+                    <input type="hidden" id="debt-image-url" value="">
+                    
+                    <div id="image-preview-container" class="mt-2 hidden">
+                        <div class="relative inline-block">
+                            <img id="image-preview" src="" alt="Previsualización" class="w-20 h-20 object-cover rounded-lg border border-slate-200">
+                            <button type="button" onclick="removeSelectedImage()" class="absolute -top-2 -right-2 bg-tagRed text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm hover:scale-110 transition">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-add-debt')" class="w-1/2 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold text-xs hover:bg-slate-50 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-tagBlue hover:bg-blue-800 text-white font-semibold text-xs transition shadow-md">
+                        Guardar Deuda
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: VISUALIZADOR DE COMPROBANTE -->
+    <div id="modal-view-image" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-view-image')"></div>
+        <div class="relative max-w-lg w-full bg-slate-900 rounded-3xl overflow-hidden shadow-2xl z-10 p-2">
+            <button onclick="closeModal('modal-view-image')" class="absolute top-4 right-4 bg-slate-800/80 text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-700 transition z-20">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <img id="modal-image-src" src="" alt="Comprobante" class="w-full h-auto max-h-[75vh] object-contain rounded-2xl">
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIGURACIÓN E INTEGRACIÓN CON SUPABASE -->
+    <div id="modal-supabase" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-supabase')"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden z-10 border border-slate-100">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-cloud text-emerald-400"></i> Configuración Supabase
+                </h3>
+                <button onclick="closeModal('modal-supabase')" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Conecta tu base de datos de Supabase para guardar tus cobros en la nube y sincronizarlos entre dispositivos.
+                </p>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Supabase Project URL</label>
+                    <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-xs">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Supabase Anon Key</label>
+                    <input type="password" id="supabase-key" placeholder="eyJhbGciOi..." class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-xs">
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <h4 class="text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-database text-tagBlue"></i> Tabla requerida en Supabase:
+                    </h4>
+                    <p class="text-[10px] text-slate-500 font-mono bg-white p-2 rounded border border-slate-200 select-all overflow-x-auto">
+                        create table tag_debt_records (id text primary key, data jsonb, updated_at timestamp default now());
+                    </p>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="saveSupabaseCredentials()" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs transition">
+                        Guardar Credenciales
+                    </button>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="uploadToSupabase()" id="btn-cloud-upload" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en Nube
+                    </button>
+                    <button onclick="downloadFromSupabase()" id="btn-cloud-download" class="py-2.5 px-3 rounded-xl bg-tagBlue hover:bg-blue-800 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Cargar de Nube
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PAPELERA -->
+    <div id="modal-trash" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-trash')"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden z-10 border border-slate-100 flex flex-col max-h-[80vh]">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-trash-can text-tagRed"></i> Papelera de Reciclaje
+                </h3>
+                <button onclick="closeModal('modal-trash')" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 space-y-3" id="trash-container">
+                <!-- Ítems eliminados renderizados aquí -->
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+                <button onclick="emptyTrash()" class="text-xs font-semibold text-tagRed hover:underline flex items-center gap-1">
+                    <i class="fa-solid fa-broom"></i> Vaciar Papelera
+                </button>
+                <button onclick="closeModal('modal-trash')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICACIÓN TOAST SOBRE EL MENÚ -->
+    <div id="toast-container" class="fixed bottom-20 left-0 right-0 z-40 px-3 pointer-events-none hidden">
+        <div class="max-w-md mx-auto bg-slate-900/95 backdrop-blur-md text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center justify-between border border-slate-700/80 pointer-events-auto">
+            <span id="toast-message" class="text-xs font-medium truncate pr-2">Notificación</span>
+            <button id="toast-undo-btn" onclick="executeUndo()" class="hidden bg-tagBlue hover:bg-blue-600 text-white w-7 h-7 rounded-lg flex items-center justify-center transition shadow shrink-0" title="Deshacer acción">
+                <i class="fa-solid fa-rotate-left text-xs"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT DE LA APLICACIÓN -->
+    <script>
+        // ESTADO INICIAL PREDETERMINADO
+        const DEFAULT_DEBTORS = [
+            {
+                id: 'd1',
+                name: 'Adrian',
+                plate: 'XW4380',
+                debts: [
+                    { id: 'b1', highway: 'Autopista Central', amount: 24500, image: '' },
+                    { id: 'b2', highway: 'Costanera Norte', amount: 12300, image: '' }
+                ]
+            },
+            {
+                id: 'd2',
+                name: 'Papa',
+                plate: 'TG4626',
+                debts: [
+                    { id: 'b3', highway: 'Vespucio Sur', amount: 45000, image: '' }
+                ]
+            },
+            {
+                id: 'd3',
+                name: 'Tia Chigua',
+                plate: 'DJVY40',
+                debts: [
+                    { id: 'b4', highway: 'AVO (Américo Vespucio Oriente)', amount: 18900, image: '' },
+                    { id: 'b5', highway: 'Ruta 68 (Santiago - Valparaíso)', amount: 8400, image: '' }
+                ]
+            }
+        ];
+
+        // DICCIONARIO POR MES (Clave format: "YYYY-MM")
+        let monthlyData = {};
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth(); // 0 - 11
+
+        let debtors = [];
+        let trash = [];
+        let lastAction = null;
+        let openDebtorId = null;
+
+        // CLIENTE DE SUPABASE
+        let supabaseClient = null;
+        let supabaseConfig = { url: '', key: '' };
+
+        // CONFIGURACIÓN DE SWIPE GESTURES (ARRASTRAR PANTALLA)
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        function setupSwipeGestures() {
+            const swipeArea = document.getElementById('main-swipe-area');
+            if (!swipeArea) return;
+
+            swipeArea.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            swipeArea.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].screenX;
+                const touchEndY = e.changedTouches[0].screenY;
+                handleSwipeGesture(touchStartX, touchStartY, touchEndX, touchEndY);
+            }, { passive: true });
+        }
+
+        function handleSwipeGesture(startX, startY, endX, endY) {
+            const diffX = endX - startX;
+            const diffY = endY - startY;
+
+            // Ignorar si hay modales abiertos o el movimiento es predominantemente vertical
+            if (document.body.classList.contains('modal-open')) return;
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
+                if (diffX < 0) {
+                    changeMonth(1);  // Deslizar izquierda -> Mes Siguiente
+                } else {
+                    changeMonth(-1); // Deslizar derecha -> Mes Anterior
+                }
+            }
+        }
+
+        // CONTROL DE PEGAR IMAGEN DESDE EL PORTAPAPELES (CTRL + V)
+        function setupPasteImageHandler() {
+            document.addEventListener('paste', (e) => {
+                const modalAddDebt = document.getElementById('modal-add-debt');
+                if (modalAddDebt.classList.contains('hidden')) return;
+
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let item of items) {
+                    if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const imageDataUrl = event.target.result;
+                            document.getElementById('debt-image-url').value = imageDataUrl;
+                            document.getElementById('image-preview').src = imageDataUrl;
+                            document.getElementById('image-preview-container').classList.remove('hidden');
+                            showToast("Captura pegada correctamente", false);
+                        };
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            });
+        }
+
+        // CLAVE DE FORMATO AÑO-MES
+        function getMonthKey(year, monthIndex) {
+            const m = String(monthIndex + 1).padStart(2, '0');
+            return `${year}-${m}`;
+        }
+
+        // INICIALIZACIÓN
+        window.addEventListener('DOMContentLoaded', async () => {
+            setupSwipeGestures();
+            setupPasteImageHandler();
+            loadState();
+            await initSupabaseFromStorage();
+            
+            // Redireccionar automáticamente al último mes que tenga datos cargados
+            goToLatestMonthWithData(true);
+        });
+
+        // INICIALIZAR CREDENCIALES SUPABASE DESDE LOCALSTORAGE CON TIMEOUT DE SEGURIDAD
+        async function initSupabaseFromStorage() {
+            const savedUrl = localStorage.getItem('tag_supabase_url') || '';
+            const savedKey = localStorage.getItem('tag_supabase_key') || '';
+
+            document.getElementById('supabase-url').value = savedUrl;
+            document.getElementById('supabase-key').value = savedKey;
+
+            if (savedUrl && savedKey) {
+                try {
+                    updateSupabaseStatusUI('connecting');
+                    supabaseClient = window.supabase.createClient(savedUrl, savedKey);
+                    
+                    // Ejecutar descarga con límite de tiempo estricto
+                    await downloadFromSupabase(true);
+                } catch (err) {
+                    console.error('Error al conectar con Supabase:', err);
+                    updateSupabaseStatusUI('error');
+                }
+            } else {
+                updateSupabaseStatusUI('disconnected');
+            }
+        }
+
+        function updateSupabaseStatusUI(statusState) {
+            const icon = document.getElementById('supabase-icon');
+            const text = document.getElementById('supabase-status-text');
+            const btn = document.getElementById('supabase-status-btn');
+            const bottomText = document.getElementById('bottom-nube-text');
+
+            if (!icon || !text) return;
+
+            // Reset de estilos base para evitar mezclas de color
+            btn.className = "px-2.5 py-1.5 rounded-xl shadow-inner border flex items-center gap-1.5 transition text-xs font-semibold ";
+
+            switch (statusState) {
+                case 'connecting':
+                    btn.className += 'bg-amber-950/40 border-amber-500/40 text-amber-300';
+                    icon.className = 'fa-solid fa-spinner fa-spin text-amber-400 text-xs';
+                    text.textContent = 'Conectando...';
+                    if (bottomText) bottomText.textContent = 'Conectando';
+                    break;
+                case 'synced':
+                    btn.className += 'bg-emerald-950/50 border-emerald-500/50 text-emerald-300';
+                    icon.className = 'fa-solid fa-cloud-check text-emerald-400 text-xs';
+                    text.textContent = 'Sincronizado';
+                    if (bottomText) bottomText.textContent = 'Nube Ok';
+                    break;
+                case 'saving':
+                    btn.className += 'bg-blue-950/50 border-blue-500/50 text-blue-300';
+                    icon.className = 'fa-solid fa-cloud-arrow-up text-blue-400 fa-bounce text-xs';
+                    text.textContent = 'Guardando...';
+                    if (bottomText) bottomText.textContent = 'Guardando';
+                    break;
+                case 'error':
+                    btn.className += 'bg-rose-950/50 border-rose-500/50 text-rose-300';
+                    icon.className = 'fa-solid fa-cloud-xmark text-rose-400 text-xs';
+                    text.textContent = 'Error Nube';
+                    if (bottomText) bottomText.textContent = 'Error Nube';
+                    break;
+                case 'disconnected':
+                default:
+                    btn.className += 'bg-slate-900/80 border-white/10 text-slate-300';
+                    icon.className = 'fa-solid fa-cloud text-slate-400 text-xs';
+                    text.textContent = 'Sin configurar';
+                    if (bottomText) bottomText.textContent = 'Nube';
+                    break;
+            }
+        }
+
+        // GUARDAR DATOS EN SUPABASE
+        async function uploadToSupabase() {
+            if (!supabaseClient) {
+                showToast("Configura primero la conexión a Supabase", false);
+                openModal('modal-supabase');
+                return;
+            }
+
+            const payload = {
+                id: 'main_records',
+                data: {
+                    monthlyData: monthlyData,
+                    trash: trash,
+                    updatedAt: new Date().toISOString()
+                },
+                updated_at: new Date().toISOString()
+            };
+
+            showToast("Guardando en la nube...", false);
+            updateSupabaseStatusUI('saving');
+
+            try {
+                const { error } = await supabaseClient
+                    .from('tag_debt_records')
+                    .upsert(payload, { onConflict: 'id' });
+
+                if (error) {
+                    throw error;
+                }
+
+                updateSupabaseStatusUI('synced');
+                showToast("¡Datos guardados exitosamente en Supabase!", false);
+                closeModal('modal-supabase');
+            } catch (err) {
+                console.error(err);
+                updateSupabaseStatusUI('error');
+                showToast("Error al subir a Supabase: " + (err.message || 'Verifica la tabla'), false);
+            }
+        }
+
+        // DESCARGAR DATOS DESDE SUPABASE CON TIMEOUT DE SEGURIDAD (MÁX 3.5s)
+        async function downloadFromSupabase(isSilent = false) {
+            if (!supabaseClient) {
+                if (!isSilent) {
+                    showToast("Configura primero la conexión a Supabase", false);
+                    openModal('modal-supabase');
+                }
+                updateSupabaseStatusUI('disconnected');
+                return;
+            }
+
+            if (!isSilent) showToast("Cargando desde la nube...", false);
+            updateSupabaseStatusUI('connecting');
+
+            let timerId = null;
+
+            try {
+                // Promesa con Timeout de 3.5 segundos para evitar estado infinito "Conectando"
+                const fetchPromise = supabaseClient
+                    .from('tag_debt_records')
+                    .select('data')
+                    .eq('id', 'main_records')
+                    .single();
+
+                const timeoutPromise = new Promise((_, reject) => {
+                    timerId = setTimeout(() => reject(new Error('Tiempo de espera de conexión agotado')), 3500);
+                });
+
+                const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+                if (timerId) clearTimeout(timerId);
+
+                if (error && error.code !== 'PGRST116') {
+                    throw error;
+                }
+
+                if (data && data.data && data.data.monthlyData) {
+                    monthlyData = data.data.monthlyData;
+                    trash = Array.isArray(data.data.trash) ? data.data.trash : [];
+                    loadCurrentMonthDebtors();
+                    
+                    const key = getMonthKey(currentYear, currentMonth);
+                    monthlyData[key] = debtors;
+                    localStorage.setItem('tag_monthly_data_v3', JSON.stringify(monthlyData));
+                    localStorage.setItem('tag_trash_data_v2', JSON.stringify(trash));
+
+                    renderApp();
+                    updateSupabaseStatusUI('synced');
+                    if (!isSilent) {
+                        showToast("¡Datos descargados con éxito desde la nube!", false);
+                        closeModal('modal-supabase');
+                    }
+                } else {
+                    updateSupabaseStatusUI('synced');
+                    if (!isSilent) showToast("No se encontraron registros previos en Supabase", false);
+                }
+            } catch (err) {
+                if (timerId) clearTimeout(timerId);
+                console.error(err);
+                
+                // Si falla o excede tiempo, desbloquea el estado UI
+                updateSupabaseStatusUI('error');
+                if (!isSilent) showToast("Error de conexión: " + (err.message || 'Verifica tu red o Supabase'), false);
+            }
+        }
+
+        // PERSISTENCIA LOCAL Y NAVEGACIÓN MES
+        function loadState() {
+            const savedMonthly = localStorage.getItem('tag_monthly_data_v3');
+            const savedTrash = localStorage.getItem('tag_trash_data_v2');
+
+            if (savedMonthly) {
+                monthlyData = JSON.parse(savedMonthly);
+            } else {
+                const key = getMonthKey(currentYear, currentMonth);
+                monthlyData[key] = DEFAULT_DEBTORS;
+            }
+
+            trash = savedTrash ? JSON.parse(savedTrash) : [];
+            loadCurrentMonthDebtors();
+        }
+
+        function saveSupabaseCredentials() {
+            const url = document.getElementById('supabase-url').value.trim();
+            const key = document.getElementById('supabase-key').value.trim();
+
+            if (!url || !key) {
+                showToast("Ingresa tanto el URL como la Anon Key", false);
+                return;
+            }
+
+            try {
+                updateSupabaseStatusUI('connecting');
+                supabaseClient = window.supabase.createClient(url, key);
+                localStorage.setItem('tag_supabase_url', url);
+                localStorage.setItem('tag_supabase_key', key);
+                
+                downloadFromSupabase(true);
+                showToast("¡Supabase configurado correctamente!", false);
+            } catch (err) {
+                showToast("Error al inicializar cliente Supabase", false);
+                updateSupabaseStatusUI('error');
+            }
+        }
+
+        function loadCurrentMonthDebtors() {
+            const key = getMonthKey(currentYear, currentMonth);
+            if (!monthlyData[key]) {
+                monthlyData[key] = [
+                    { id: 'd1', name: 'Adrian', plate: 'XW4380', debts: [] },
+                    { id: 'd2', name: 'Papa', plate: 'TG4626', debts: [] },
+                    { id: 'd3', name: 'Tia Chigua', plate: 'DJVY40', debts: [] }
+                ];
+            }
+            debtors = monthlyData[key];
+            openDebtorId = null;
+        }
+
+        function saveState() {
+            const key = getMonthKey(currentYear, currentMonth);
+            monthlyData[key] = debtors;
+            localStorage.setItem('tag_monthly_data_v3', JSON.stringify(monthlyData));
+            localStorage.setItem('tag_trash_data_v2', JSON.stringify(trash));
+
+            if (supabaseClient) {
+                autoSyncToSupabase();
+            }
+        }
+
+        // GUARDADO AUTOMÁTICO SILENCIOSO EN SUPABASE
+        let autoSyncTimer = null;
+        function autoSyncToSupabase() {
+            if (!supabaseClient) return;
+
+            updateSupabaseStatusUI('saving');
+
+            clearTimeout(autoSyncTimer);
+            autoSyncTimer = setTimeout(async () => {
+                const payload = {
+                    id: 'main_records',
+                    data: {
+                        monthlyData: monthlyData,
+                        trash: trash,
+                        updatedAt: new Date().toISOString()
+                    },
+                    updated_at: new Date().toISOString()
+                };
+
+                try {
+                    const { error } = await supabaseClient
+                        .from('tag_debt_records')
+                        .upsert(payload, { onConflict: 'id' });
+
+                    if (!error) {
+                        updateSupabaseStatusUI('synced');
+                    } else {
+                        updateSupabaseStatusUI('error');
+                    }
+                } catch (err) {
+                    console.error('Error en sincronización automática:', err);
+                    updateSupabaseStatusUI('error');
+                }
+            }, 400);
+        }
+
+        // BOTÓN HOME: IR AL ÚLTIMO MES CON DATOS (DIRECTO EN 1 SOLO CLIC)
+        function goToLatestMonthWithData(isInitial = false) {
+            const monthKeys = Object.keys(monthlyData).sort().reverse();
+            let targetKey = null;
+
+            for (const key of monthKeys) {
+                const list = monthlyData[key];
+                if (Array.isArray(list) && list.some(d => Array.isArray(d.debts) && d.debts.length > 0)) {
+                    targetKey = key;
+                    break;
+                }
+            }
+
+            if (!targetKey) {
+                const now = new Date();
+                targetKey = getMonthKey(now.getFullYear(), now.getMonth());
+            }
+
+            const [yearStr, monthStr] = targetKey.split('-');
+            currentYear = parseInt(yearStr, 10);
+            currentMonth = parseInt(monthStr, 10) - 1;
+
+            loadCurrentMonthDebtors();
+            renderApp();
+            if (!isInitial) {
+                showToast("Redirigido al último mes con datos", false);
+            }
+        }
+
+        // CAMBIO DE MES
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            loadCurrentMonthDebtors();
+            
+            const animatedWrapper = document.getElementById('swipe-animated-wrapper');
+            if (animatedWrapper) {
+                animatedWrapper.classList.remove('animate-slide-left', 'animate-slide-right');
+                void animatedWrapper.offsetWidth;
+                animatedWrapper.classList.add(delta > 0 ? 'animate-slide-left' : 'animate-slide-right');
+            }
+
+            renderApp();
+        }
+
+        function updateMonthDisplay() {
+            const date = new Date(currentYear, currentMonth, 1);
+            const monthName = date.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
+            document.getElementById('current-month-display').textContent = monthName;
+            document.getElementById('floating-month-tag').textContent = monthName;
+        }
+
+        // RENDERIZAR VISTA DE MESES EN VENTANA FLOTANTE (MODAL)
+        function renderYearMonthsGrid() {
+            const titleEl = document.getElementById('grid-year-title');
+            if (titleEl) titleEl.textContent = currentYear;
+            
+            const container = document.getElementById('months-grid-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+
+            const monthNamesShort = [
+                'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+            ];
+
+            monthNamesShort.forEach((mName, index) => {
+                const key = getMonthKey(currentYear, index);
+                const monthDebtors = monthlyData[key] || [];
+                
+                const hasDebts = monthDebtors.some(d => Array.isArray(d.debts) && d.debts.length > 0);
+                const isCurrentActive = index === currentMonth;
+
+                let btnStyle = 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100';
+
+                if (isCurrentActive) {
+                    btnStyle = 'bg-tagBlue text-white border-tagBlue font-extrabold ring-2 ring-blue-300 shadow-sm';
+                } else if (hasDebts) {
+                    btnStyle = 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold hover:bg-emerald-100';
+                }
+
+                const monthBtn = document.createElement('button');
+                monthBtn.type = 'button';
+                monthBtn.onclick = () => selectMonthFromGrid(index);
+                monthBtn.className = `p-3 rounded-2xl text-xs border transition-all flex flex-col items-center justify-center relative active:scale-95 ${btnStyle}`;
+                
+                monthBtn.innerHTML = `
+                    <span class="capitalize text-xs">${mName}</span>
+                    ${hasDebts && !isCurrentActive ? '<span class="w-2 h-2 rounded-full bg-emerald-500 mt-1"></span>' : ''}
+                `;
+
+                container.appendChild(monthBtn);
+            });
+        }
+
+        function selectMonthFromGrid(monthIndex) {
+            const delta = monthIndex - currentMonth;
+            currentMonth = monthIndex;
+            loadCurrentMonthDebtors();
+
+            const animatedWrapper = document.getElementById('swipe-animated-wrapper');
+            if (animatedWrapper && delta !== 0) {
+                animatedWrapper.classList.remove('animate-slide-left', 'animate-slide-right');
+                void animatedWrapper.offsetWidth;
+                animatedWrapper.classList.add(delta > 0 ? 'animate-slide-left' : 'animate-slide-right');
+            }
+            closeModal('modal-year-grid');
+            renderApp();
+        }
+
+        function removeSelectedImage() {
+            document.getElementById('debt-image-file').value = '';
+            document.getElementById('debt-image-url').value = '';
+            document.getElementById('image-preview').src = '';
+            document.getElementById('image-preview-container').classList.add('hidden');
+        }
+
+        // FORMATO DE MONEDA
+        function formatCLP(amount) {
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // RENDERIZADO COMPLETO
+        function renderApp() {
+            updateMonthDisplay();
+            renderMetrics();
+            renderDebtors();
+            renderDebtorOptions();
+            renderTrash();
+            renderYearMonthsGrid();
+        }
+
+        // RENDERIZADO DE MÉTRICAS
+        function renderMetrics() {
+            let totalDebt = 0;
+            const highwayTotals = {};
+
+            debtors.forEach(debtor => {
+                debtor.debts.forEach(debt => {
+                    const val = Number(debt.amount) || 0;
+                    totalDebt += val;
+                    highwayTotals[debt.highway] = (highwayTotals[debt.highway] || 0) + val;
+                });
+            });
+
+            document.getElementById('stat-total-debt').textContent = formatCLP(totalDebt);
+
+            let topHighway = 'Ninguna';
+            let maxVal = 0;
+            for (const [hw, total] of Object.entries(highwayTotals)) {
+                if (total > maxVal) {
+                    maxVal = total;
+                    topHighway = hw;
+                }
+            }
+
+            document.getElementById('stat-top-highway').textContent = maxVal > 0 ? topHighway : 'Sin cobros';
+            document.getElementById('debtor-count').textContent = debtors.length;
+        }
+
+        // RENDERIZADO DE TARJETAS DE DEUDORES
+        function renderDebtors() {
+            const container = document.getElementById('debtors-container');
+            container.innerHTML = '';
+
+            if (debtors.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-8 text-center border border-slate-200">
+                        <i class="fa-solid fa-folder-open text-slate-300 text-4xl mb-3"></i>
+                        <p class="text-sm font-semibold text-slate-600">No hay deudores registrados.</p>
+                        <p class="text-xs text-slate-400 mt-1">Carga una nueva deuda para comenzar.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            debtors.forEach(debtor => {
+                const isOpen = debtor.id === openDebtorId;
+                const totalDebtorDebt = debtor.debts.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+
+                const card = document.createElement('div');
+                card.id = `debtor-card-${debtor.id}`;
+                card.className = `bg-white rounded-2xl shadow-sm border transition-all duration-200 overflow-hidden ${
+                    isOpen ? 'border-tagBlue ring-1 ring-tagBlue' : 'border-slate-200 hover:border-slate-300'
+                }`;
+
+                card.innerHTML = `
+                    <!-- Encabezado del Deudor -->
+                    <div onclick="toggleDebtorAccordion('${debtor.id}')" class="p-4 cursor-pointer flex items-center justify-between bg-white hover:bg-slate-50 transition select-none">
+                        <div class="flex items-center gap-3">
+                            <span class="patente-chile">${debtor.plate}</span>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm md:text-base leading-snug">${debtor.name}</h3>
+                                <p class="text-xs text-slate-500 font-medium">
+                                    ${debtor.debts.length} ${debtor.debts.length === 1 ? 'autopista' : 'autopistas'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <span class="block font-extrabold text-sm md:text-base text-tagRed">
+                                    ${formatCLP(totalDebtorDebt)}
+                                </span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-300 ${isOpen ? 'rotate-180 text-tagBlue' : ''}"></i>
+                        </div>
+                    </div>
+
+                    <!-- Acordeón de Cobros -->
+                    <div class="${isOpen ? 'block' : 'hidden'} border-t border-slate-100 bg-slate-50/70 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalle de Autopistas</span>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="copyWhatsAppSummary('${debtor.id}')" class="w-7 h-7 rounded-lg bg-tagBlue text-white hover:bg-blue-800 flex items-center justify-center text-xs transition shadow-2xs" title="Copiar resumen para WhatsApp">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                                <button onclick="openAddDebtFor('${debtor.id}')" class="w-7 h-7 rounded-lg bg-tagBlue text-white hover:bg-blue-800 flex items-center justify-center text-xs transition shadow-2xs" title="Agregar Cobro">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        ${debtor.debts.length === 0 ? `
+                            <p class="text-xs text-slate-400 italic py-2 text-center">Sin cobros asociados a este deudor.</p>
+                        ` : `
+                            <div class="space-y-2.5">
+                                ${debtor.debts.map(debt => `
+                                    <div class="bg-white rounded-xl p-3 border border-slate-200 flex items-center justify-between gap-2 shadow-2xs">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            ${debt.image ? `
+                                                <img src="${debt.image}" onclick="viewImage('${debt.image}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-80 transition shrink-0" title="Ver comprobante">
+                                            ` : `
+                                                <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 shrink-0">
+                                                    <i class="fa-solid fa-road text-sm"></i>
+                                                </div>
+                                            `}
+                                            <div class="min-w-0">
+                                                <h4 class="font-bold text-xs text-slate-800 truncate">${debt.highway}</h4>
+                                                <span class="text-xs font-extrabold text-tagRed">${formatCLP(debt.amount)}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <button onclick="editDebt('${debtor.id}', '${debt.id}')" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-tagBlue hover:text-white flex items-center justify-center text-xs transition" title="Editar deuda">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </button>
+                                            <button onclick="deleteDebt('${debtor.id}', '${debt.id}')" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 hover:bg-tagRed hover:text-white flex items-center justify-center text-xs transition" title="Eliminar deuda">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // CONTROL DEL ACORDEÓN CON AJUSTE AUTOMÁTICO DE PANTALLA
+        function toggleDebtorAccordion(debtorId) {
+            openDebtorId = openDebtorId === debtorId ? null : debtorId;
+            renderDebtors();
+
+            if (openDebtorId) {
+                setTimeout(() => {
+                    const cardElement = document.getElementById(`debtor-card-${openDebtorId}`);
+                    if (cardElement) {
+                        cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 80);
+            }
+        }
+
+        // RENDERIZADO DE DESPLEGABLE EN MODAL
+        function renderDebtorOptions() {
+            const select = document.getElementById('debt-debtor-id');
+            select.innerHTML = debtors.map(d => `<option value="${d.id}">${d.name} (${d.plate})</option>`).join('');
+        }
+
+        // ABRIR FORMULARIO PARA DEUDOR ESPECÍFICO
+        function openAddDebtFor(debtorId) {
+            document.getElementById('form-add-debt').reset();
+            document.getElementById('debt-edit-id').value = '';
+            removeSelectedImage();
+            document.getElementById('modal-debt-title').innerHTML = `<i class="fa-solid fa-receipt text-tagBlue"></i> Cargar Nueva Deuda`;
+            document.getElementById('debt-debtor-id').value = debtorId;
+            openModal('modal-add-debt');
+        }
+
+        // VISUALIZAR IMAGEN
+        function viewImage(imgUrl) {
+            if (!imgUrl) return;
+            document.getElementById('modal-image-src').src = imgUrl;
+            openModal('modal-view-image');
+        }
+
+        // GUARDAR / EDITAR DEUDA
+        function saveDebt(event) {
+            event.preventDefault();
+            const debtorId = document.getElementById('debt-debtor-id').value;
+            const editId = document.getElementById('debt-edit-id').value;
+            const highway = document.getElementById('debt-highway').value;
+            const amount = parseFloat(document.getElementById('debt-amount').value);
+            const image = document.getElementById('debt-image-url').value;
+
+            if (!debtorId || isNaN(amount) || amount <= 0) {
+                showToast("Por favor ingresa un monto válido", false);
+                return;
+            }
+
+            const debtor = debtors.find(d => d.id === debtorId);
+            if (!debtor) return;
+
+            if (editId) {
+                // Modo Edición
+                const debt = debtor.debts.find(d => d.id === editId);
+                if (debt) {
+                    debt.highway = highway;
+                    debt.amount = amount;
+                    debt.image = image;
+                    showToast("Cobro actualizado con éxito", false);
+                }
+            } else {
+                // Modo Nuevo
+                debtor.debts.push({
+                    id: 'b_' + Date.now(),
+                    highway,
+                    amount,
+                    image
+                });
+                showToast("Cobro registrado con éxito", false);
+            }
+
+            saveState();
+            openDebtorId = debtorId;
+            renderApp();
+            closeModal('modal-add-debt');
+        }
+
+        // EDITAR DEUDA
+        function editDebt(debtorId, debtId) {
+            const debtor = debtors.find(d => d.id === debtorId);
+            if (!debtor) return;
+            const debt = debtor.debts.find(d => d.id === debtId);
+            if (!debt) return;
+
+            document.getElementById('debt-edit-id').value = debt.id;
+            document.getElementById('debt-debtor-id').value = debtor.id;
+            document.getElementById('debt-highway').value = debt.highway;
+            document.getElementById('debt-amount').value = debt.amount;
+            
+            removeSelectedImage();
+            if (debt.image) {
+                document.getElementById('debt-image-url').value = debt.image;
+                document.getElementById('image-preview').src = debt.image;
+                document.getElementById('image-preview-container').classList.remove('hidden');
+            }
+
+            document.getElementById('modal-debt-title').innerHTML = `<i class="fa-solid fa-pen text-tagBlue"></i> Editar Deuda`;
+            openModal('modal-add-debt');
+        }
+
+        // ELIMINAR DEUDA
+        function deleteDebt(debtorId, debtId) {
+            const debtor = debtors.find(d => d.id === debtorId);
+            if (!debtor) return;
+
+            const debtIndex = debtor.debts.findIndex(d => d.id === debtId);
+            if (debtIndex === -1) return;
+
+            const [deletedDebt] = debtor.debts.splice(debtIndex, 1);
+            
+            trash.push({
+                type: 'debt',
+                debtorId,
+                debtorName: debtor.name,
+                item: deletedDebt,
+                deletedAt: new Date().toISOString()
+            });
+
+            lastAction = {
+                type: 'RESTORE_DEBT',
+                debtorId,
+                debt: deletedDebt,
+                index: debtIndex
+            };
+
+            saveState();
+            renderApp();
+            showToast(`Cobro de ${deletedDebt.highway} enviado a papelera`, true);
+        }
+
+        // PAPELERA
+        function renderTrash() {
+            const container = document.getElementById('trash-container');
+            const badge = document.getElementById('trash-badge');
+            
+            if (trash.length > 0) {
+                badge.textContent = trash.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            if (trash.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-trash text-3xl mb-2 text-slate-300"></i>
+                        <p class="text-xs font-semibold">La papelera está vacía</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = trash.map((tItem, index) => `
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Cobro de ${tItem.debtorName}</span>
+                        <h4 class="font-bold text-xs text-slate-800 truncate">${tItem.item.highway}</h4>
+                        <span class="text-xs font-extrabold text-tagRed">${formatCLP(tItem.item.amount)}</span>
+                    </div>
+                    <button onclick="restoreFromTrash(${index})" class="px-3 py-1.5 bg-tagBlue text-white text-xs font-semibold rounded-xl hover:bg-blue-800 transition shadow-xs flex items-center gap-1 shrink-0">
+                        <i class="fa-solid fa-rotate-left"></i> Restaurar
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function restoreFromTrash(index) {
+            const restored = trash.splice(index, 1)[0];
+            if (restored) {
+                const debtor = debtors.find(d => d.id === restored.debtorId);
+                if (debtor) {
+                    debtor.debts.push(restored.item);
+                }
+            }
+            saveState();
+            renderApp();
+            showToast("Elemento restaurado con éxito", false);
+        }
+
+        function emptyTrash() {
+            if (trash.length === 0) return;
+            trash = [];
+            saveState();
+            renderTrash();
+            renderMetrics();
+            showToast("Papelera vaciada completamente", false);
+        }
+
+        // COPIAR RESUMEN PARA WHATSAPP
+        function copyWhatsAppSummary(debtorId) {
+            const debtor = debtors.find(d => d.id === debtorId);
+            if (!debtor) return;
+
+            if (debtor.debts.length === 0) {
+                showToast(`No hay cobros registrados para ${debtor.name}`, false);
+                return;
+            }
+
+            const totalDebt = debtor.debts.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+            
+            let message = `*RESUMEN DE DEUDA TAG*\n`;
+            message += `👤 Deudor: *${debtor.name}*\n`;
+            message += `🚘 Patente: *${debtor.plate}*\n`;
+            message += `------------------------\n`;
+            message += `*Detalle de cobros:*\n`;
+
+            debtor.debts.forEach(d => {
+                message += `• ${d.highway}: ${formatCLP(d.amount)}\n`;
+            });
+
+            message += `------------------------\n`;
+            message += `💰 *TOTAL A PAGAR: ${formatCLP(totalDebt)}*`;
+
+            // Copiado silencioso sin parpadeos ni elementos visibles
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(message).then(() => {
+                    showToast(`¡Resumen de ${debtor.name} copiado!`, false);
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(message, debtor.name);
+                });
+            } else {
+                fallbackCopyTextToClipboard(message, debtor.name);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text, debtorName) {
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = text;
+            
+            // Ocultar completamente sin alterar el diseño ni activar scroll
+            tempTextArea.setAttribute("readonly", "");
+            tempTextArea.style.position = "absolute";
+            tempTextArea.style.left = "-9999px";
+            tempTextArea.style.top = "0";
+            
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast(`¡Resumen de ${debtorName} copiado!`, false);
+                } else {
+                    showToast("No se pudo copiar el texto", false);
+                }
+            } catch (err) {
+                showToast("Error al copiar al portapapeles", false);
+            }
+
+            document.body.removeChild(tempTextArea);
+        }
+
+        // EXPORTAR INFORMACIÓN A ARCHIVO JSON
+        function exportDataToJSON() {
+            const dataToExport = {
+                exportDate: new Date().toISOString(),
+                monthlyData: monthlyData,
+                trash: trash
+            };
+
+            const jsonString = JSON.stringify(dataToExport, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const now = new Date();
+            const timestamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+            const fileName = `deudas_tag_chile_${timestamp}.json`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast("Datos guardados y descargados en JSON", false);
+        }
+
+        // IMPORTAR INFORMACIÓN DESDE ARCHIVO JSON
+        function triggerJSONImport() {
+            document.getElementById('json-file-input').click();
+        }
+
+        function importDataFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+
+                    if (importedData && (importedData.monthlyData || Array.isArray(importedData.debtors))) {
+                        if (importedData.monthlyData) {
+                            monthlyData = importedData.monthlyData;
+                        } else if (Array.isArray(importedData.debtors)) {
+                            const key = getMonthKey(currentYear, currentMonth);
+                            monthlyData[key] = importedData.debtors;
+                        }
+                        
+                        trash = Array.isArray(importedData.trash) ? importedData.trash : [];
+                        loadCurrentMonthDebtors();
+                        saveState();
+                        renderApp();
+                        showToast("Datos JSON cargados con éxito", false);
+                    } else {
+                        showToast("Formato de archivo JSON no válido", false);
+                    }
+                } catch (err) {
+                    showToast("Error al leer el archivo JSON", false);
+                }
+                
+                // Limpiar selector de archivo
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // DESHACER
+        function executeUndo() {
+            if (!lastAction) return;
+
+            if (lastAction.type === 'RESTORE_DEBT') {
+                const debtor = debtors.find(d => d.id === lastAction.debtorId);
+                if (debtor) {
+                    debtor.debts.splice(lastAction.index, 0, lastAction.debt);
+                    const tIdx = trash.findIndex(t => t.item.id === lastAction.debt.id);
+                    if (tIdx !== -1) trash.splice(tIdx, 1);
+                }
+            }
+
+            lastAction = null;
+            saveState();
+            renderApp();
+            showToast("Acción deshecha", false);
+        }
+
+        // NOTIFICACIONES TOAST
+        function showToast(message, canUndo = false) {
+            const container = document.getElementById('toast-container');
+            const msgEl = document.getElementById('toast-message');
+            const undoBtn = document.getElementById('toast-undo-btn');
+
+            msgEl.textContent = message;
+
+            if (canUndo && lastAction) {
+                undoBtn.classList.remove('hidden');
+            } else {
+                undoBtn.classList.add('hidden');
+            }
+
+            container.classList.remove('hidden');
+
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 4000);
+        }
+
+        // CONTROL DE MODALES
+        function openModal(id) {
+            if (id === 'modal-add-debt' && !document.getElementById('debt-edit-id').value) {
+                document.getElementById('form-add-debt').reset();
+                removeSelectedImage();
+                document.getElementById('modal-debt-title').innerHTML = `<i class="fa-solid fa-receipt text-tagBlue"></i> Cargar Nueva Deuda`;
+            }
+            if (id === 'modal-year-grid') {
+                renderYearMonthsGrid();
+            }
+            document.getElementById(id).classList.remove('hidden');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            
+            // Si ya no quedan modales abiertos, reactivar scroll
+            const openModals = document.querySelectorAll('.fixed.z-50:not(.hidden)');
+            if (openModals.length === 0) {
+                document.body.classList.remove('modal-open');
+            }
+        }
+    </script>
+</body>
+</html>
