@@ -2,7 +2,8 @@
 <html lang="es" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#003399">
     <title>Gestor de Deudas TAG - Autopistas de Chile</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -35,6 +36,11 @@
             width: 100%;
             position: relative;
         }
+
+        /* Anti-descuadre al deslizar: el gesto lateral solo cambia de mes, nunca desplaza la página */
+        html, body { overscroll-behavior-x: none; }
+        #main-swipe-area, header, #bottom-main-nav { touch-action: pan-y; }
+        #main-swipe-area { overflow-x: clip; }
 
         /* Diseño de Placa Patente Chilena Impecable */
         .patente-chile {
@@ -109,6 +115,51 @@
             from { opacity: 0.5; }
             to { opacity: 1; }
         }
+
+        /* ===== MEJORAS: menú moderno + adaptación móvil / PC ===== */
+        header{padding-top:env(safe-area-inset-top,0px)}
+        .fixed.z-50>.relative{max-height:92dvh;overflow-y:auto!important}
+        .sg{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 20px rgba(15,23,42,.18);z-index:60;max-height:190px;overflow:auto}
+        .sg button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:13px}
+        .sg button:hover{background:#f1f5f9}
+        /* La notificación siempre va por encima de las ventanas flotantes (z-50) */
+        #toast-container{bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;z-index:200!important}
+        body.kb #bottom-main-nav{display:none}
+        #bottom-main-nav{padding:0 12px max(10px,env(safe-area-inset-bottom));pointer-events:none}
+        #bottom-main-nav .dock{pointer-events:auto;max-width:520px;margin:0 auto;display:flex;align-items:center;justify-content:space-around;gap:0;padding:5px 4px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);border:1px solid rgba(226,232,240,.9);border-radius:28px;box-shadow:0 12px 32px rgba(15,23,42,.16),0 2px 6px rgba(15,23,42,.06)}
+        .dk{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 1px 6px;border-radius:20px;font-size:9.5px;font-weight:600;letter-spacing:-.01em;color:#64748b;transition:color .2s,transform .15s,background .2s;-webkit-tap-highlight-color:transparent}
+        .dk i{font-size:18px;transition:transform .2s}
+        .dk>span:not(.bd){max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .dk:hover{background:rgba(241,245,249,.9)}
+        .dk:active{transform:scale(.9)}
+        .dk.on{color:#003399}
+        .dk.on i{transform:translateY(-1px)}
+        .dk.on::after{content:"";position:absolute;bottom:1px;width:4px;height:4px;border-radius:50%;background:#003399}
+        .dk .bd{position:absolute;top:1px;left:calc(50% + 4px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#da291c;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+        .dk .bd.hidden{display:none}
+        #dock-nube{transition:color .3s,background-color .3s}
+        #dock-nube[data-st="synced"]{color:#059669;background:rgba(16,185,129,.13)}
+        #dock-nube[data-st="connecting"]{color:#d97706;background:rgba(245,158,11,.15)}
+        #dock-nube[data-st="saving"]{color:#2563eb;background:rgba(59,130,246,.13)}
+        #dock-nube[data-st="error"]{color:#dc2626;background:rgba(239,68,68,.13)}
+        #dock-nube[data-st="disconnected"]{color:#64748b}
+        #dock-nube.on::after{background:currentColor}
+        @media(min-width:640px){.dk{font-size:11px}.dk i{font-size:19px}}
+        @media(min-width:1024px){#bottom-main-nav .dock{max-width:600px}.dk{font-size:12px}.dk i{font-size:20px}}
+        .month-pop{animation:monthPop .22s ease-out}
+        @keyframes monthPop{0%{transform:translateY(8px) scale(.96);opacity:.2}100%{transform:none;opacity:1}}
+        #swipe-animated-wrapper{will-change:transform,opacity}
+        /* Banner de notificación: aparece y desaparece con animación */
+        #toast-container>div{will-change:transform,opacity;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+        #toast-container.toast-in>div{animation:toastIn .34s cubic-bezier(.22,1,.36,1) both}
+        #toast-container.toast-out>div{animation:toastOut .22s ease-in both}
+        #toast-container.toast-bump>div{animation:toastBump .22s ease-out both}
+        @keyframes toastIn{0%{opacity:0;transform:translateY(22px) scale(.95)}100%{opacity:1;transform:none}}
+        @keyframes toastOut{0%{opacity:1;transform:none}100%{opacity:0;transform:translateY(14px) scale(.95)}}
+        @keyframes toastBump{0%{transform:scale(.97)}60%{transform:scale(1.02)}100%{transform:none}}
+        @media(prefers-reduced-motion:reduce){#toast-container>div{animation:none!important}}
+        .grid-in{animation:gridIn .24s ease-out}
+        @keyframes gridIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
     </style>
 </head>
 <body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between bg-slate-50 relative w-full">
@@ -196,7 +247,7 @@
                     <span id="debtor-count" class="text-xs bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full font-bold">0</span>
                 </div>
 
-                <div id="debtors-container" class="space-y-3">
+                <div id="debtors-container" class="grid gap-3 lg:grid-cols-2 items-start">
                     <!-- Se renderiza dinámicamente con JavaScript -->
                 </div>
             </section>
@@ -204,48 +255,17 @@
 
     </main>
 
-    <!-- MENÚ NAVEGACIÓN INFERIOR ESTÁTICO Y AISLADO -->
-    <nav id="bottom-main-nav" class="fixed-bottom-nav bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg px-2 py-2">
-        <div class="max-w-md mx-auto grid grid-cols-7 gap-1">
-            <button onclick="goToLatestMonthWithData()" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[10px] transition-all active:scale-95 border border-slate-200" title="Ir al último mes con datos">
-                <i class="fa-solid fa-house text-xs text-tagBlue"></i>
-                <span class="truncate mt-0.5">Inicio</span>
-            </button>
-
-            <button onclick="openModal('modal-year-grid')" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[10px] transition-all active:scale-95 border border-slate-200" title="Ver meses del año">
-                <i class="fa-solid fa-calendar-days text-xs text-slate-600"></i>
-                <span class="truncate mt-0.5">Meses</span>
-            </button>
-
-            <button onclick="openModal('modal-stats')" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-[10px] transition-all active:scale-95 border border-indigo-200" title="Ver Estadísticas">
-                <i class="fa-solid fa-chart-column text-xs text-indigo-600"></i>
-                <span class="truncate mt-0.5">Stats</span>
-            </button>
-
-            <button onclick="openModal('modal-supabase')" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-800 text-white font-medium text-[10px] hover:bg-slate-900 transition-all active:scale-95 shadow-2xs" title="Sincronizar con Supabase">
-                <i class="fa-solid fa-cloud-arrow-up text-xs text-emerald-400"></i>
-                <span id="bottom-nube-text" class="truncate mt-0.5">Nube</span>
-            </button>
-
-            <button onclick="exportDataToJSON()" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-700 text-white font-medium text-[10px] hover:bg-slate-800 transition-all active:scale-95 shadow-2xs" title="Descargar copia de seguridad en JSON">
-                <i class="fa-solid fa-file-arrow-down text-xs text-green-300"></i>
-                <span class="truncate mt-0.5">Guardar</span>
-            </button>
-
-            <button onclick="triggerJSONImport()" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-700 text-white font-medium text-[10px] hover:bg-slate-800 transition-all active:scale-95 shadow-2xs" title="Cargar datos desde un archivo JSON">
-                <i class="fa-solid fa-file-arrow-up text-xs text-blue-300"></i>
-                <span class="truncate mt-0.5">Cargar</span>
-            </button>
-            <input type="file" id="json-file-input" accept=".json,application/json" onchange="importDataFromJSON(event)" class="hidden">
-
-            <button onclick="openModal('modal-trash')" class="relative flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-100 text-slate-700 font-medium text-[10px] hover:bg-slate-200 transition-all active:scale-95 border border-slate-200">
-                <i class="fa-solid fa-trash-can text-xs text-slate-600"></i>
-                <span class="truncate mt-0.5">Papelera</span>
-                <span id="trash-badge" class="hidden absolute -top-1 -right-1 bg-tagRed text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold border-2 border-white">
-                    0
-                </span>
-            </button>
-        </div>
+    <!-- MENÚ NAVEGACIÓN INFERIOR MODERNO -->
+    <nav id="bottom-main-nav" class="fixed-bottom-nav"><div class="dock">
+        <button class="dk on" data-m="" onclick="goToLatestMonthWithData()" title="Ir al último mes con datos"><i class="fa-solid fa-house"></i><span>Inicio</span></button>
+        <button class="dk" data-m="modal-year-grid" onclick="openModal('modal-year-grid')" title="Ver meses del año"><i class="fa-solid fa-calendar-days"></i><span>Meses</span></button>
+        <button class="dk" data-m="modal-stats" onclick="openModal('modal-stats')" title="Estadísticas y resumen"><i class="fa-solid fa-chart-column"></i><span>Stats</span></button>
+        <button class="dk" id="dock-nube" data-st="disconnected" data-m="modal-supabase" onclick="openModal('modal-supabase')" title="Nube (Supabase)"><i id="dock-nube-icon" class="fa-solid fa-cloud"></i><span id="bottom-nube-text">Nube</span></button>
+        <button class="dk" onclick="exportDataToJSON()" title="Guardar una copia de los datos (JSON)"><i class="fa-solid fa-file-arrow-down"></i><span>Exportar</span></button>
+        <button class="dk" onclick="triggerJSONImport()" title="Cargar una copia de los datos (JSON)"><i class="fa-solid fa-file-arrow-up"></i><span>Importar</span></button>
+        <button class="dk" data-m="modal-trash" onclick="openModal('modal-trash')" title="Papelera"><i class="fa-solid fa-trash-can"></i><span>Papelera</span><span id="trash-badge" class="bd hidden">0</span></button>
+    </div>
+    <input type="file" id="json-file-input" accept=".json,application/json" onchange="importDataFromJSON(event)" class="hidden">
     </nav>
 
     <!-- MODAL: ESTADÍSTICAS Y RESUMEN -->
@@ -304,102 +324,71 @@
     </div>
 
     <!-- MODAL: VER MESES DEL AÑO -->
-    <div id="modal-year-grid" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-20 sm:pb-3 hidden">
+    <div id="modal-year-grid" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-24 sm:pb-3 hidden">
         <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-year-grid')"></div>
-        <div class="relative bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden z-10 border border-slate-100">
+        <div class="relative bg-white rounded-3xl max-w-sm sm:max-w-md w-full shadow-2xl overflow-hidden z-10 border border-slate-100">
             <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
-                <h3 class="font-bold text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-days text-tagBlue"></i> Meses del <span id="grid-year-title">2026</span>
-                </h3>
-                <button onclick="closeModal('modal-year-grid')" class="text-slate-400 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            
-            <div class="p-4 bg-slate-50">
-                <div id="months-grid-container" class="grid grid-cols-3 gap-2">
-                    <!-- Cuadrícula renderizada por JS -->
-                </div>
+                <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-calendar-days text-tagBlue"></i> Meses</h3>
+                <button onclick="closeModal('modal-year-grid')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <div class="p-3 bg-white border-t border-slate-100 text-center">
-                <p class="text-[10px] text-slate-400">Verde: Meses con registros de cobros</p>
+            <div class="px-4 pt-4 pb-3 bg-white flex items-center justify-between gap-2">
+                <button onclick="shiftGridYear(-1)" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-600 flex items-center justify-center transition" title="Año anterior"><i class="fa-solid fa-chevron-left text-sm"></i></button>
+                <div class="text-center min-w-0">
+                    <div id="grid-year-title" class="text-2xl font-extrabold text-slate-800 leading-none tabular-nums">2026</div>
+                    <p id="grid-year-summary" class="text-[11px] text-slate-500 font-medium mt-1 truncate"></p>
+                </div>
+                <button onclick="shiftGridYear(1)" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-600 flex items-center justify-center transition" title="Año siguiente"><i class="fa-solid fa-chevron-right text-sm"></i></button>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-100">
+                <div id="months-grid-container" class="grid grid-cols-3 gap-2.5"></div>
+            </div>
+
+            <div class="px-4 py-3 bg-white border-t border-slate-100 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-3 text-[10px] text-slate-500 font-medium">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-tagBlue"></span>Viendo</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-400"></span>Con cobros</span>
+                </div>
+                <button onclick="selectMonthFromGrid(new Date().getMonth(), new Date().getFullYear())" class="text-xs font-bold text-tagBlue bg-tagBlue/10 hover:bg-tagBlue/20 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5"><i class="fa-solid fa-location-crosshairs"></i> Ir a hoy</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL: CARGAR / EDITAR DEUDA -->
-    <div id="modal-add-debt" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div id="modal-add-debt" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 hidden">
         <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-add-debt')"></div>
-        <div class="relative bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden z-10 border border-slate-100">
-            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-                <h3 id="modal-debt-title" class="font-bold text-base flex items-center gap-2">
-                    <i class="fa-solid fa-receipt text-tagBlue"></i> Cargar Nueva Deuda
-                </h3>
-                <button onclick="closeModal('modal-add-debt')" class="text-slate-400 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+        <div class="relative bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl z-10 border border-slate-100">
+            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between sticky top-0 z-20">
+                <h3 id="modal-debt-title" class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-receipt text-tagBlue"></i> Cargar Nueva Deuda</h3>
+                <button onclick="closeModal('modal-add-debt')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <form id="form-add-debt" onsubmit="saveDebt(event)" class="p-6 space-y-4">
+            <form id="form-add-debt" onsubmit="saveDebt(event)" class="p-5 space-y-4">
                 <input type="hidden" id="debt-edit-id" value="">
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Deudor Asignado *</label>
-                    <select id="debt-debtor-id" required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-sm font-medium bg-white">
-                        <!-- Opciones dinámicas de deudores -->
-                    </select>
+                <p id="debt-for" class="text-xs font-bold text-tagBlue bg-tagBlue/5 border border-tagBlue/15 rounded-xl px-3 py-2"></p>
+                <div class="hidden">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Deudor *</label>
+                    <select id="debt-debtor-id" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-sm font-medium bg-white"></select>
                 </div>
-
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Autopista *</label>
-                    <select id="debt-highway" required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-sm font-medium bg-white">
-                        <option value="Autopista Central">Autopista Central</option>
-                        <option value="Costanera Norte">Costanera Norte</option>
-                        <option value="Vespucio Sur">Vespucio Sur</option>
-                        <option value="Vespucio Norte">Vespucio Norte</option>
-                        <option value="Autopista Nororiente">Autopista Nororiente</option>
-                        <option value="AVO (Américo Vespucio Oriente)">AVO (Américo Vespucio Oriente)</option>
-                        <option value="Survías (Ruta 5 Sur)">Survías (Ruta 5 Sur)</option>
-                        <option value="Ruta del Maipo">Ruta del Maipo</option>
-                        <option value="Ruta 68 (Santiago - Valparaíso)">Ruta 68 (Santiago - Valparaíso)</option>
-                        <option value="Pase Diario Unificado">Pase Diario Unificado</option>
-                        <option value="Otra Autopista / Peaje">Otra Autopista / Peaje</option>
-                    </select>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Autopista y monto ($ CLP) *</label>
+                    <div id="debt-lines" class="space-y-2"></div>
+                    <button type="button" id="btn-add-line" onclick="addDebtLine()" class="mt-2 w-full py-2 rounded-xl border border-dashed border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition"><i class="fa-solid fa-plus text-[10px]"></i> Otra autopista y monto</button>
                 </div>
-
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Monto ($ CLP) *</label>
-                    <div class="relative">
-                        <span class="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
-                        <input type="number" id="debt-amount" required min="1" step="any" placeholder="Ejemplo: 15450" class="w-full pl-7 pr-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-sm font-semibold">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">
-                        Imagen o Comprobante (Opcional) 
-                        <span class="text-[10px] text-tagBlue font-normal block">Se optimiza automáticamente • Pegar con Ctrl+V</span>
-                    </label>
-                    <input type="file" id="debt-image-file" accept="image/*" onchange="handleImageFileSelect(event)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-tagBlue file:text-white hover:file:bg-blue-800 cursor-pointer">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Imagen o comprobante (opcional) <span class="font-normal text-slate-400">, también puedes pegar con Ctrl+V</span></label>
+                    <input type="file" id="debt-image-file" accept="image/*" onchange="handleImageFileSelect(event)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-500">
                     <input type="hidden" id="debt-image-url" value="">
-                    
                     <div id="image-preview-container" class="mt-2 hidden">
                         <div class="relative inline-block">
                             <img id="image-preview" src="" alt="Previsualización" class="w-20 h-20 object-cover rounded-lg border border-slate-200">
-                            <button type="button" onclick="removeSelectedImage()" class="absolute -top-2 -right-2 bg-tagRed text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm hover:scale-110 transition">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
+                            <button type="button" onclick="removeSelectedImage()" class="absolute -top-2 -right-2 bg-tagRed text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
                 </div>
-
-                <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-add-debt')" class="w-1/2 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold text-xs hover:bg-slate-50 transition">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-tagBlue hover:bg-blue-800 text-white font-semibold text-xs transition shadow-md">
-                        Guardar Deuda
-                    </button>
+                <div class="pt-1 flex gap-2">
+                    <button type="button" onclick="closeModal('modal-add-debt')" class="w-1/2 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-600 font-medium text-xs hover:bg-slate-50 transition">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 px-4 rounded-xl bg-tagBlue hover:bg-blue-800 text-white font-semibold text-xs transition shadow-md">Guardar</button>
                 </div>
             </form>
         </div>
@@ -452,6 +441,8 @@
                     </p>
                 </div>
 
+                <p id="supabase-fixed-note" class="hidden text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2"><i class="fa-solid fa-circle-check mr-1"></i> Credenciales incrustadas en el archivo: se conecta solo donde se abra.</p>
+                <button onclick="downloadHtmlWithCredentials()" class="w-full py-2.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold text-xs transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-file-code"></i> Incrustar en el archivo (descargar HTML)</button>
                 <div class="grid grid-cols-2 gap-2 pt-2">
                     <button onclick="saveSupabaseCredentials()" class="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs transition">
                         Guardar Credenciales
@@ -517,32 +508,9 @@
     <script>
         // ESTADO INICIAL PREDETERMINADO
         const DEFAULT_DEBTORS = [
-            {
-                id: 'd1',
-                name: 'Adrian',
-                plate: 'XW4380',
-                debts: [
-                    { id: 'b1', highway: 'Autopista Central', amount: 24500, image: '' },
-                    { id: 'b2', highway: 'Costanera Norte', amount: 12300, image: '' }
-                ]
-            },
-            {
-                id: 'd2',
-                name: 'Papa',
-                plate: 'TG4626',
-                debts: [
-                    { id: 'b3', highway: 'Vespucio Sur', amount: 45000, image: '' }
-                ]
-            },
-            {
-                id: 'd3',
-                name: 'Tia Chigua',
-                plate: 'DJVY40',
-                debts: [
-                    { id: 'b4', highway: 'AVO (Américo Vespucio Oriente)', amount: 18900, image: '' },
-                    { id: 'b5', highway: 'Ruta 68 (Santiago - Valparaíso)', amount: 8400, image: '' }
-                ]
-            }
+            { id: 'd1', name: 'Adrian', plate: 'XW4380', debts: [] },
+            { id: 'd2', name: 'Papá', plate: 'TG4626', debts: [] },
+            { id: 'd3', name: 'Tia Chigua', plate: 'DJVY40', debts: [] }
         ];
 
         // DICCIONARIO POR MES (Clave format: "YYYY-MM")
@@ -556,6 +524,10 @@
         let openDebtorId = null;
 
         // CLIENTE DE SUPABASE
+        // ===== CREDENCIALES SUPABASE FIJAS =====
+        // Si pegas aquí tu URL y tu clave "anon", el archivo se conecta solo en cualquier lugar donde se abra.
+        // (También puedes generarlas desde Nube > "Incrustar en el archivo".)
+        const SUPABASE_FIXED = { url: '', key: '' };
         let supabaseClient = null;
         let autoSyncTimer = null;
 
@@ -598,57 +570,86 @@
         function setupSwipeGestures() {
             const mainSwipeArea = document.getElementById('main-swipe-area');
             if (!mainSwipeArea) return;
+            const wrap = document.getElementById('swipe-animated-wrapper');
+
+            // Red de seguridad: si algo desplaza la página hacia un costado, vuelve a su lugar
+            const fixScroll = () => {
+                [document.documentElement, document.body, mainSwipeArea].forEach(el => {
+                    if (el && el.scrollLeft) el.scrollLeft = 0;
+                });
+            };
+            document.addEventListener('scroll', fixScroll, { passive: true, capture: true });
+            window.addEventListener('resize', fixScroll);
+
+            let ignoreSwipe = false, dragging = false;
+            const resetDrag = () => {
+                if (!wrap) return;
+                wrap.style.transition = 'transform .18s cubic-bezier(.22,1,.36,1), opacity .18s ease';
+                wrap.style.transform = '';
+                wrap.style.opacity = '';
+                setTimeout(() => { if (!monthBusy) wrap.style.transition = ''; }, 200);
+            };
 
             mainSwipeArea.addEventListener('touchstart', (e) => {
                 if (document.body.classList.contains('modal-open')) return;
-                touchStartX = e.changedTouches[0].screenX;
-                touchStartY = e.changedTouches[0].screenY;
+                dragging = false;
+                ignoreSwipe = e.touches.length > 1 || !!e.target.closest('input,textarea,select,.overflow-x-auto');
+                touchStartX = e.changedTouches[0].clientX;
+                touchStartY = e.changedTouches[0].clientY;
+            }, { passive: true });
+
+            // La pantalla acompaña al dedo mientras deslizas (con resistencia y límite)
+            mainSwipeArea.addEventListener('touchmove', (e) => {
+                if (!wrap || ignoreSwipe || monthBusy || touchStartX === 0 || document.body.classList.contains('modal-open')) return;
+                const dx = e.changedTouches[0].clientX - touchStartX;
+                const dy = e.changedTouches[0].clientY - touchStartY;
+                if (!dragging) {
+                    if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.6) dragging = true; else return;
+                }
+                const off = Math.max(-72, Math.min(72, dx * 0.4));
+                wrap.style.transition = 'none';
+                wrap.style.transform = 'translate3d(' + off + 'px,0,0)';
+                wrap.style.opacity = String(1 - Math.min(Math.abs(off) / 150, 0.45));
             }, { passive: true });
 
             mainSwipeArea.addEventListener('touchend', (e) => {
-                if (document.body.classList.contains('modal-open') || touchStartX === 0) return;
-                const touchEndX = e.changedTouches[0].screenX;
-                const touchEndY = e.changedTouches[0].screenY;
-                handleSwipeGesture(touchStartX, touchStartY, touchEndX, touchEndY);
+                const wasDrag = dragging; dragging = false;
+                if (document.body.classList.contains('modal-open') || touchStartX === 0 || ignoreSwipe) {
+                    touchStartX = 0;
+                    if (wasDrag) resetDrag();
+                    return;
+                }
+                const hit = handleSwipeGesture(touchStartX, touchStartY, e.changedTouches[0].clientX, e.changedTouches[0].clientY);
                 touchStartX = 0;
                 touchStartY = 0;
+                if (!hit && wasDrag) resetDrag();
+                requestAnimationFrame(fixScroll);
+            }, { passive: true });
+
+            mainSwipeArea.addEventListener('touchcancel', () => {
+                touchStartX = 0; ignoreSwipe = true;
+                if (dragging) { dragging = false; resetDrag(); }
+                fixScroll();
             }, { passive: true });
         }
 
         function handleSwipeGesture(startX, startY, endX, endY) {
+            if (monthBusy) return false;
             const diffX = endX - startX;
             const diffY = endY - startY;
-
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                if (diffX < 0) {
-                    changeMonth(1);
-                } else {
-                    changeMonth(-1);
-                }
+            if (Math.abs(diffX) > Math.abs(diffY) * 1.5 && Math.abs(diffX) > 60) {
+                changeMonth(diffX < 0 ? 1 : -1);
+                return true;
             }
+            return false;
         }
 
         function setupPasteImageHandler() {
-            document.addEventListener('paste', async (e) => {
-                const modalAddDebt = document.getElementById('modal-add-debt');
-                if (modalAddDebt.classList.contains('hidden')) return;
-
-                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-                for (let item of items) {
-                    if (item.kind === 'file' && item.type.startsWith('image/')) {
-                        const blob = item.getAsFile();
-                        try {
-                            const compressedDataUrl = await compressImage(blob);
-                            document.getElementById('debt-image-url').value = compressedDataUrl;
-                            document.getElementById('image-preview').src = compressedDataUrl;
-                            document.getElementById('image-preview-container').classList.remove('hidden');
-                            showToast("Captura pegada y optimizada", false);
-                        } catch (err) {
-                            console.error("Error al comprimir captura:", err);
-                            showToast("Error al procesar la imagen pegada", false);
-                        }
-                        break;
-                    }
+            document.addEventListener('paste', (e) => {
+                if (qs('#modal-add-debt').classList.contains('hidden')) return;
+                const items = (e.clipboardData || {}).items || [];
+                for (const it of items) {
+                    if (it.kind === 'file' && it.type.startsWith('image/')) { loadImage(it.getAsFile()); showToast('Captura pegada correctamente', false); break; }
                 }
             });
         }
@@ -662,10 +663,9 @@
             setupSwipeGestures();
             setupPasteImageHandler();
             
-            const savedUrl = localStorage.getItem('tag_supabase_url') || '';
-            const savedKey = localStorage.getItem('tag_supabase_key') || '';
+            const creds = getSupabaseCreds();
 
-            if (savedUrl && savedKey) {
+            if (creds.url && creds.key) {
                 showToast("Cargando datos prioritarios de Supabase...", false);
                 await initSupabaseFromStorage();
             } else {
@@ -675,19 +675,19 @@
         });
 
         async function initSupabaseFromStorage() {
-            const savedUrl = localStorage.getItem('tag_supabase_url') || '';
-            const savedKey = localStorage.getItem('tag_supabase_key') || '';
+            const c = getSupabaseCreds();
+            document.getElementById('supabase-url').value = c.url;
+            document.getElementById('supabase-key').value = c.key;
+            const note = document.getElementById('supabase-fixed-note');
+            if (note) note.classList.toggle('hidden', c.source !== 'file');
 
-            document.getElementById('supabase-url').value = savedUrl;
-            document.getElementById('supabase-key').value = savedKey;
-
-            if (savedUrl && savedKey) {
+            if (c.url && c.key) {
                 try {
                     updateSupabaseStatusUI('connecting');
-                    supabaseClient = window.supabase.createClient(savedUrl, savedKey);
-                    
+                    supabaseClient = window.supabase.createClient(c.url, c.key);
+
                     const downloadSuccess = await downloadFromSupabase(true);
-                    
+
                     if (!downloadSuccess) {
                         loadState();
                         goToLatestMonthWithData(true);
@@ -705,11 +705,22 @@
             }
         }
 
+        // La nube del menú cambia de color e ícono según su estado
+        function paintDockCloud(state) {
+            const b = document.getElementById('dock-nube'), i = document.getElementById('dock-nube-icon');
+            if (!b || !i) return;
+            const st = ['connecting', 'synced', 'saving', 'error'].includes(state) ? state : 'disconnected';
+            const icons = { connecting: 'fa-cloud-arrow-down animate-pulse', synced: 'fa-cloud', saving: 'fa-cloud-arrow-up animate-bounce', error: 'fa-cloud-bolt', disconnected: 'fa-cloud' };
+            b.dataset.st = st;
+            i.className = 'fa-solid ' + icons[st];
+        }
+
         function updateSupabaseStatusUI(statusState) {
             const icon = document.getElementById('supabase-icon');
             const text = document.getElementById('supabase-status-text');
             const btn = document.getElementById('supabase-status-btn');
             const bottomText = document.getElementById('bottom-nube-text');
+            paintDockCloud(statusState);
 
             if (!icon || !text || !btn) return;
 
@@ -819,6 +830,10 @@
                 if (error && error.code !== 'PGRST116') throw error;
 
                 if (data && data.data && data.data.monthlyData) {
+                                        const cloudTs = Date.parse(data.data.updatedAt || '') || 0;
+                    const localTs = parseInt(localStorage.getItem('tag_updated_at') || '0', 10);
+                    if (isSilent && localTs > cloudTs) { autoSyncToSupabase(); return; }
+                    try { localStorage.setItem('tag_updated_at', String(cloudTs || Date.now())); } catch (e) {}
                     monthlyData = data.data.monthlyData;
                     trash = Array.isArray(data.data.trash) ? data.data.trash : [];
                     
@@ -852,17 +867,11 @@
         }
 
         function loadState() {
-            const savedMonthly = localStorage.getItem('tag_monthly_data_v3');
-            const savedTrash = localStorage.getItem('tag_trash_data_v2');
-
-            if (savedMonthly) {
-                monthlyData = JSON.parse(savedMonthly);
-            } else {
-                const key = getMonthKey(currentYear, currentMonth);
-                monthlyData[key] = DEFAULT_DEBTORS;
-            }
-
-            trash = savedTrash ? JSON.parse(savedTrash) : [];
+            let sm = null, st = null;
+            try { sm = JSON.parse(localStorage.getItem('tag_monthly_data_v3')); st = JSON.parse(localStorage.getItem('tag_trash_data_v2')); } catch (e) {}
+            if (sm && typeof sm === 'object') { monthlyData = sm; }
+            else { monthlyData[getMonthKey(currentYear, currentMonth)] = JSON.parse(JSON.stringify(DEFAULT_DEBTORS)); }
+            trash = Array.isArray(st) ? st : [];
             loadCurrentMonthDebtors();
         }
 
@@ -880,9 +889,10 @@
                 supabaseClient = window.supabase.createClient(url, key);
                 localStorage.setItem('tag_supabase_url', url);
                 localStorage.setItem('tag_supabase_key', key);
-                
+                localStorage.removeItem('tag_supabase_off');
+
                 downloadFromSupabase(true);
-                showToast("¡Supabase configurado correctamente!", false);
+                showToast("¡Supabase configurado! Se conectará solo en este dispositivo", false);
             } catch (err) {
                 showToast("Error al inicializar cliente Supabase", false);
                 updateSupabaseStatusUI('error');
@@ -893,9 +903,13 @@
             supabaseClient = null;
             localStorage.removeItem('tag_supabase_url');
             localStorage.removeItem('tag_supabase_key');
+            // evita que las credenciales incrustadas en el archivo reconecten solas hasta que las guardes de nuevo
+            localStorage.setItem('tag_supabase_off', '1');
             document.getElementById('supabase-url').value = '';
             document.getElementById('supabase-key').value = '';
-            
+            const note = document.getElementById('supabase-fixed-note');
+            if (note) note.classList.add('hidden');
+
             updateSupabaseStatusUI('disconnected');
             showToast("Supabase desconectado correctamente", false);
             closeModal('modal-supabase');
@@ -903,32 +917,27 @@
 
         function loadCurrentMonthDebtors() {
             const key = getMonthKey(currentYear, currentMonth);
-            if (!monthlyData[key]) {
-                monthlyData[key] = [
-                    { id: 'd1', name: 'Adrian', plate: 'XW4380', debts: [] },
-                    { id: 'd2', name: 'Papa', plate: 'TG4626', debts: [] },
-                    { id: 'd3', name: 'Tia Chigua', plate: 'DJVY40', debts: [] }
-                ];
-            }
+            const reg = {};
+            Object.keys(monthlyData).sort().forEach(k => (monthlyData[k] || []).forEach(d => { reg[d.id] = { name: d.name, plate: d.plate }; }));
+            if (!Object.keys(reg).length) DEFAULT_DEBTORS.forEach(d => { reg[d.id] = { name: d.name, plate: d.plate }; });
+            if (!Array.isArray(monthlyData[key])) monthlyData[key] = [];
+            Object.entries(reg).forEach(([id, r]) => {
+                if (!monthlyData[key].some(d => d.id === id)) monthlyData[key].push({ id, name: r.name, plate: r.plate, debts: [] });
+            });
             debtors = monthlyData[key];
             openDebtorId = null;
         }
 
         function saveState() {
-            const key = getMonthKey(currentYear, currentMonth);
-            monthlyData[key] = debtors;
-            
+            monthlyData[getMonthKey(currentYear, currentMonth)] = debtors;
             try {
                 localStorage.setItem('tag_monthly_data_v3', JSON.stringify(monthlyData));
                 localStorage.setItem('tag_trash_data_v2', JSON.stringify(trash));
+                localStorage.setItem('tag_updated_at', String(Date.now()));
             } catch (e) {
-                console.error("Error de almacenamiento local:", e);
-                showToast("⚠️ Memoria local llena. Elimina o comprime imágenes.", false);
+                showToast('Almacenamiento lleno: usa Datos > Guardar copia', false);
             }
-
-            if (supabaseClient) {
-                autoSyncToSupabase();
-            }
+            if (supabaseClient) autoSyncToSupabase();
         }
 
         function autoSyncToSupabase() {
@@ -994,24 +1003,16 @@
         }
 
         function changeMonth(delta) {
-            currentMonth += delta;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            loadCurrentMonthDebtors();
-
-            const wrapper = document.getElementById('swipe-animated-wrapper');
-            if (wrapper) {
-                wrapper.classList.remove('fade-in-quick');
-                void wrapper.offsetWidth;
-                wrapper.classList.add('fade-in-quick');
-            }
-
-            renderApp();
+            if (monthBusy) return;
+            slideMonth(delta, () => {
+                currentMonth += delta;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                loadCurrentMonthDebtors();
+                renderApp();
+                popMonth();
+                monthToast();
+            });
         }
 
         function updateMonthDisplay() {
@@ -1025,75 +1026,74 @@
             if (tagEl) tagEl.textContent = `${monthOnly} ${currentYear}`;
         }
 
-        function renderYearMonthsGrid() {
-            const titleEl = document.getElementById('grid-year-title');
-            if (titleEl) titleEl.textContent = currentYear;
-            
+        function renderYearMonthsGrid(animate = false) {
+            const y = gridYear == null ? currentYear : gridYear;
             const container = document.getElementById('months-grid-container');
             if (!container) return;
-            
-            container.innerHTML = '';
+            document.getElementById('grid-year-title').textContent = y;
 
-            const monthNamesShort = [
-                'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-                'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-            ];
-
-            monthNamesShort.forEach((mName, index) => {
-                const key = getMonthKey(currentYear, index);
-                const monthDebtors = monthlyData[key] || [];
-                
-                const hasDebts = monthDebtors.some(d => Array.isArray(d.debts) && d.debts.length > 0);
-                const isCurrentActive = index === currentMonth;
-
-                let btnStyle = 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100';
-
-                if (isCurrentActive) {
-                    btnStyle = 'bg-tagBlue text-white border-tagBlue font-extrabold ring-2 ring-blue-300 shadow-sm';
-                } else if (hasDebts) {
-                    btnStyle = 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold hover:bg-emerald-100';
-                }
-
-                const monthBtn = document.createElement('button');
-                monthBtn.type = 'button';
-                monthBtn.onclick = () => selectMonthFromGrid(index);
-                monthBtn.className = `p-3 rounded-2xl text-xs border transition-all flex flex-col items-center justify-center relative active:scale-95 ${btnStyle}`;
-                
-                monthBtn.innerHTML = `
-                    <span class="capitalize text-xs">${mName}</span>
-                    ${hasDebts && !isCurrentActive ? '<span class="w-2 h-2 rounded-full bg-emerald-500 mt-1"></span>' : ''}
-                `;
-
-                container.appendChild(monthBtn);
+            const names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const now = new Date();
+            const data = names.map((n, i) => {
+                const list = monthlyData[getMonthKey(y, i)] || [];
+                let total = 0, count = 0;
+                list.forEach(d => (d.debts || []).forEach(x => { total += Number(x.amount) || 0; count++; }));
+                return { n, i, total, count };
             });
+            const max = Math.max(0, ...data.map(m => m.total));
+            const yearTotal = data.reduce((acc, m) => acc + m.total, 0);
+            const active = data.filter(m => m.count > 0).length;
+            const sum = document.getElementById('grid-year-summary');
+            if (sum) sum.innerHTML = `<span class="font-extrabold text-tagRed">${formatCLP(yearTotal)}</span> en el año, ${active} ${active === 1 ? 'mes' : 'meses'} con cobros`;
+
+            container.innerHTML = data.map(m => {
+                const cur = y === currentYear && m.i === currentMonth;
+                const hoy = y === now.getFullYear() && m.i === now.getMonth();
+                const has = m.count > 0;
+                const cls = cur ? 'bg-tagBlue text-white border-tagBlue ring-2 ring-blue-300 shadow-md'
+                    : has ? 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'
+                    : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-100';
+                const pct = max > 0 ? Math.max(8, Math.round(m.total / max * 100)) : 0;
+                return `<button type="button" onclick="selectMonthFromGrid(${m.i}, ${y})" class="relative overflow-hidden rounded-2xl border p-2.5 pb-3 text-left transition active:scale-95 ${cls}">
+                    <span class="flex items-center justify-between gap-1"><span class="text-xs font-extrabold">${m.n}</span>${hoy ? `<span class="text-[9px] font-bold px-1.5 py-px rounded-md ${cur ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-700'}">Hoy</span>` : ''}</span>
+                    <span class="block text-[11px] font-bold mt-1 tabular-nums truncate">${has ? formatCLP(m.total) : 'Sin datos'}</span>
+                    <span class="block text-[10px] ${cur ? 'text-blue-100' : 'text-slate-400'}">${has ? m.count + (m.count === 1 ? ' cobro' : ' cobros') : '&nbsp;'}</span>
+                    ${has ? `<span class="absolute left-0 bottom-0 h-1 rounded-r ${cur ? 'bg-white/80' : 'bg-emerald-500'}" style="width:${pct}%"></span>` : ''}
+                </button>`;
+            }).join('');
+
+            if (animate) {
+                container.classList.remove('grid-in');
+                void container.offsetWidth;
+                container.classList.add('grid-in');
+            }
         }
 
-        function selectMonthFromGrid(monthIndex) {
-            currentMonth = monthIndex;
-            loadCurrentMonthDebtors();
+        function selectMonthFromGrid(monthIndex, year) {
+            const y = year != null ? year : (gridYear == null ? currentYear : gridYear);
+            const delta = (y * 12 + monthIndex) - (currentYear * 12 + currentMonth);
             closeModal('modal-year-grid');
-            renderApp();
+            if (!delta) return;
+            slideMonth(delta, () => {
+                currentYear = y;
+                currentMonth = monthIndex;
+                loadCurrentMonthDebtors();
+                renderApp();
+                popMonth();
+                monthToast();
+            });
         }
 
         function handleImageFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            compressImage(file).then(compressedDataUrl => {
-                document.getElementById('debt-image-url').value = compressedDataUrl;
-                document.getElementById('image-preview').src = compressedDataUrl;
-                document.getElementById('image-preview-container').classList.remove('hidden');
-            }).catch(err => {
-                console.error("Error al procesar la imagen:", err);
-                showToast("Error al procesar la imagen seleccionada", false);
-            });
+            const f = event.target.files[0];
+            if (f) loadImage(f);
         }
 
         function removeSelectedImage() {
-            document.getElementById('debt-image-file').value = '';
-            document.getElementById('debt-image-url').value = '';
-            document.getElementById('image-preview').src = '';
-            document.getElementById('image-preview-container').classList.add('hidden');
+            qs('#debt-image-file').value = '';
+            qs('#debt-image-url').value = '';
+            qs('#image-preview').src = '';
+            qs('#image-preview-container').classList.add('hidden');
         }
 
         function formatCLP(amount) {
@@ -1234,102 +1234,51 @@
         }
 
         function renderDebtors() {
-            const container = document.getElementById('debtors-container');
-            container.innerHTML = '';
-
-            if (debtors.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-3xl p-8 text-center border border-slate-200">
-                        <i class="fa-solid fa-folder-open text-slate-300 text-4xl mb-3"></i>
-                        <p class="text-sm font-semibold text-slate-600">No hay deudores registrados.</p>
-                        <p class="text-xs text-slate-400 mt-1">Carga una nueva deuda para comenzar.</p>
-                    </div>
-                `;
+            const c = document.getElementById('debtors-container');
+            if (!debtors.length) {
+                c.innerHTML = '<div class="bg-white rounded-3xl p-8 text-center border border-slate-200 lg:col-span-2"><i class="fa-solid fa-folder-open text-slate-300 text-4xl mb-3"></i><p class="text-sm font-semibold text-slate-600">No hay deudores registrados.</p><p class="text-xs text-slate-400 mt-1">Toca + Deudor para crear el primero.</p></div>';
                 return;
             }
-
-            debtors.forEach(debtor => {
-                const isOpen = debtor.id === openDebtorId;
-                const totalDebtorDebt = debtor.debts.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
-
-                const card = document.createElement('div');
-                card.id = `debtor-card-${debtor.id}`;
-                card.className = `bg-white rounded-2xl shadow-sm border transition-all duration-200 overflow-hidden ${
-                    isOpen ? 'border-tagBlue ring-1 ring-tagBlue' : 'border-slate-200 hover:border-slate-300'
-                }`;
-
-                card.innerHTML = `
-                    <div onclick="toggleDebtorAccordion('${debtor.id}')" class="p-4 cursor-pointer flex items-center justify-between bg-white hover:bg-slate-50 transition select-none">
-                        <div class="flex items-center gap-3">
-                            <span class="patente-chile">${debtor.plate}</span>
-                            <div>
-                                <h3 class="font-bold text-slate-800 text-sm md:text-base leading-snug">${debtor.name}</h3>
-                                <p class="text-xs text-slate-500 font-medium">
-                                    ${debtor.debts.length} ${debtor.debts.length === 1 ? 'autopista' : 'autopistas'}
-                                </p>
-                            </div>
+            const B = 'w-7 h-7 rounded-lg bg-tagBlue text-white hover:bg-blue-800 flex items-center justify-center text-xs transition shadow-2xs';
+            c.innerHTML = debtors.map((d, idx) => {
+                const open = d.id === openDebtorId;
+                const tot = d.debts.reduce((x, y) => x + (Number(y.amount) || 0), 0);
+                const col = DEB_COLORS[idx % DEB_COLORS.length];
+                const rows = d.debts.map(x => `
+                    <div class="bg-white rounded-xl p-3 border border-slate-200 flex items-center justify-between gap-2 shadow-2xs">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            ${x.image ? `<img src="${x.image}" onclick="viewDebtImage('${d.id}','${x.id}')" alt="Comprobante" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-80 transition shrink-0" title="Ver comprobante">` : `<div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 shrink-0"><i class="fa-solid fa-road text-sm"></i></div>`}
+                            <div class="min-w-0"><h4 class="font-bold text-xs text-slate-800 truncate">${esc(x.highway)}</h4><span class="text-xs font-extrabold text-tagRed">${formatCLP(x.amount)}</span></div>
                         </div>
-
-                        <div class="flex items-center gap-3">
-                            <div class="text-right">
-                                <span class="block font-extrabold text-sm md:text-base text-tagRed">
-                                    ${formatCLP(totalDebtorDebt)}
-                                </span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-300 ${isOpen ? 'rotate-180 text-tagBlue' : ''}"></i>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="editDebt('${d.id}','${x.id}')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-tagBlue hover:text-white flex items-center justify-center text-xs transition" title="Editar deuda"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteDebt('${d.id}','${x.id}')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-tagRed hover:text-white flex items-center justify-center text-xs transition" title="Eliminar deuda"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>`).join('');
+                return `
+                <div id="debtor-card-${d.id}" style="border-left:5px solid ${col}" class="bg-white rounded-2xl shadow-sm border transition-all duration-200 overflow-hidden ${open ? 'border-tagBlue ring-1 ring-tagBlue' : 'border-slate-200 hover:border-slate-300'}">
+                    <div onclick="toggleDebtorAccordion('${d.id}')" class="p-4 cursor-pointer flex items-center justify-between gap-2 bg-white hover:bg-slate-50 transition select-none">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="patente-chile shrink-0">${esc(d.plate)}</span>
+                            <div class="min-w-0"><h3 class="font-bold text-slate-800 text-sm md:text-base leading-snug truncate">${esc(d.name)}</h3><p class="text-xs text-slate-500 font-medium">${d.debts.length} ${d.debts.length === 1 ? 'autopista' : 'autopistas'}</p></div>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <span class="block font-extrabold text-sm md:text-base text-tagRed">${formatCLP(tot)}</span>
+                            <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-300 ${open ? 'rotate-180 text-tagBlue' : ''}"></i>
                         </div>
                     </div>
-
-                    <div class="${isOpen ? 'block' : 'hidden'} border-t border-slate-100 bg-slate-50/70 p-4">
+                    <div class="${open ? 'block' : 'hidden'} border-t border-slate-100 bg-slate-50/70 p-4">
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalle de Autopistas</span>
                             <div class="flex items-center gap-1.5">
-                                <button onclick="copyWhatsAppSummary('${debtor.id}')" class="w-7 h-7 rounded-lg bg-tagBlue text-white hover:bg-blue-800 flex items-center justify-center text-xs transition shadow-2xs" title="Copiar resumen para WhatsApp">
-                                    <i class="fa-solid fa-copy"></i>
-                                </button>
-                                <button onclick="openAddDebtFor('${debtor.id}')" class="w-7 h-7 rounded-lg bg-tagBlue text-white hover:bg-blue-800 flex items-center justify-center text-xs transition shadow-2xs" title="Agregar Cobro">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
+                                <button onclick="copyWhatsAppSummary('${d.id}')" class="${B}" title="Copiar resumen para WhatsApp"><i class="fa-solid fa-copy"></i></button>
+                                <button onclick="openAddDebtFor('${d.id}')" class="${B}" title="Agregar cobro"><i class="fa-solid fa-plus"></i></button>
                             </div>
                         </div>
-
-                        ${debtor.debts.length === 0 ? `
-                            <p class="text-xs text-slate-400 italic py-2 text-center">Sin cobros asociados a este deudor.</p>
-                        ` : `
-                            <div class="space-y-2.5">
-                                ${debtor.debts.map(debt => `
-                                    <div class="bg-white rounded-xl p-3 border border-slate-200 flex items-center justify-between gap-2 shadow-2xs">
-                                        <div class="flex items-center gap-2.5 min-w-0">
-                                            ${debt.image ? `
-                                                <img src="${debt.image}" onclick="viewImage('${debt.image}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-80 transition shrink-0" title="Ver comprobante">
-                                            ` : `
-                                                <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 shrink-0">
-                                                    <i class="fa-solid fa-road text-sm"></i>
-                                                </div>
-                                            `}
-                                            <div class="min-w-0">
-                                                <h4 class="font-bold text-xs text-slate-800 truncate">${debt.highway}</h4>
-                                                <span class="text-xs font-extrabold text-tagRed">${formatCLP(debt.amount)}</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-1 shrink-0">
-                                            <button onclick="editDebt('${debtor.id}', '${debt.id}')" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-tagBlue hover:text-white flex items-center justify-center text-xs transition" title="Editar deuda">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </button>
-                                            <button onclick="deleteDebt('${debtor.id}', '${debt.id}')" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 hover:bg-tagRed hover:text-white flex items-center justify-center text-xs transition" title="Eliminar deuda">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `}
+                        ${d.debts.length ? `<div class="space-y-2.5">${rows}</div>` : '<p class="text-xs text-slate-400 italic py-2 text-center">Sin cobros asociados a este deudor.</p>'}
                     </div>
-                `;
-
-                container.appendChild(card);
-            });
+                </div>`;
+            }).join('');
         }
 
         function toggleDebtorAccordion(debtorId) {
@@ -1338,18 +1287,17 @@
         }
 
         function renderDebtorOptions() {
-            const select = document.getElementById('debt-debtor-id');
-            if (select) {
-                select.innerHTML = debtors.map(d => `<option value="${d.id}">${d.name} (${d.plate})</option>`).join('');
-            }
+            const sel = document.getElementById('debt-debtor-id');
+            const prev = sel.value;
+            sel.innerHTML = debtors.map(d => `<option value="${esc(d.id)}">${esc(d.name)} (${esc(d.plate)})</option>`).join('');
+            if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
         }
 
         function openAddDebtFor(debtorId) {
-            document.getElementById('form-add-debt').reset();
-            document.getElementById('debt-edit-id').value = '';
-            removeSelectedImage();
-            document.getElementById('modal-debt-title').innerHTML = `<i class="fa-solid fa-receipt text-tagBlue"></i> Cargar Nueva Deuda`;
-            document.getElementById('debt-debtor-id').value = debtorId;
+            resetDebtForm();
+            renderDebtorOptions();
+            if (debtorId) document.getElementById('debt-debtor-id').value = debtorId;
+            updateDebtFor();
             openModal('modal-add-debt');
         }
 
@@ -1361,150 +1309,94 @@
 
         function saveDebt(event) {
             event.preventDefault();
-            const debtorId = document.getElementById('debt-debtor-id').value;
-            const editId = document.getElementById('debt-edit-id').value;
-            const highway = document.getElementById('debt-highway').value;
-            const amount = parseFloat(document.getElementById('debt-amount').value);
-            const image = document.getElementById('debt-image-url').value;
-
-            if (!debtorId || isNaN(amount) || amount <= 0) {
-                showToast("Por favor ingresa un monto válido", false);
-                return;
-            }
-
-            const debtor = debtors.find(d => d.id === debtorId);
-            if (!debtor) return;
-
-            if (editId) {
-                const debt = debtor.debts.find(d => d.id === editId);
-                if (debt) {
-                    debt.highway = highway;
-                    debt.amount = amount;
-                    debt.image = image;
-                    showToast("Cobro actualizado con éxito", false);
-                }
-            } else {
-                debtor.debts.push({
-                    id: 'b_' + Date.now(),
-                    highway,
-                    amount,
-                    image
-                });
-                showToast("Cobro registrado con éxito", false);
-            }
-
-            saveState();
-            openDebtorId = debtorId;
-            renderApp();
+            const editId = qs('#debt-edit-id').value;
+            const did = qs('#debt-debtor-id').value;
+            const rows = qsa('#debt-lines .dl').map(r => ({ highway: r.querySelector('.dl-hw').value.trim(), amount: parseFloat(r.querySelector('.dl-amt').value) })).filter(r => r.amount > 0);
+            if (!rows.length) { showToast('Escribe al menos un monto válido', false); return; }
+            const image = qs('#debt-image-url').value;
             closeModal('modal-add-debt');
+            act(editId ? 'Cobro actualizado' : rows.length > 1 ? rows.length + ' cobros registrados' : 'Cobro registrado', () => {
+                const d = debtors.find(x => x.id === did);
+                if (!d) return;
+                if (editId) {
+                    const x = d.debts.find(y => y.id === editId);
+                    if (x) { x.highway = rows[0].highway || 'Sin autopista'; x.amount = rows[0].amount; x.image = image; }
+                } else {
+                    const t = Date.now();
+                    rows.forEach((r, i) => d.debts.push({ id: 'b_' + t + '_' + i, highway: r.highway || 'Sin autopista', amount: r.amount, image }));
+                }
+                openDebtorId = did;
+            });
         }
 
         function editDebt(debtorId, debtId) {
-            const debtor = debtors.find(d => d.id === debtorId);
-            if (!debtor) return;
-            const debt = debtor.debts.find(d => d.id === debtId);
-            if (!debt) return;
-
-            document.getElementById('debt-edit-id').value = debt.id;
-            document.getElementById('debt-debtor-id').value = debtor.id;
-            document.getElementById('debt-highway').value = debt.highway;
-            document.getElementById('debt-amount').value = debt.amount;
-            
-            removeSelectedImage();
-            if (debt.image) {
-                document.getElementById('debt-image-url').value = debt.image;
-                document.getElementById('image-preview').src = debt.image;
-                document.getElementById('image-preview-container').classList.remove('hidden');
-            }
-
-            document.getElementById('modal-debt-title').innerHTML = `<i class="fa-solid fa-pen text-tagBlue"></i> Editar Deuda`;
+            const d = debtors.find(x => x.id === debtorId);
+            const x = d && d.debts.find(y => y.id === debtId);
+            if (!x) return;
+            resetDebtForm();
+            qs('#debt-edit-id').value = x.id;
+            renderDebtorOptions();
+            const sel = qs('#debt-debtor-id');
+            sel.value = d.id; sel.disabled = true;
+            updateDebtFor();
+            qs('#debt-lines').innerHTML = '';
+            addDebtLine(x.highway, x.amount);
+            qs('#btn-add-line').classList.add('hidden');
+            if (x.image) setPreview(x.image);
+            qs('#modal-debt-title').innerHTML = '<i class="fa-solid fa-pen text-tagBlue"></i> Editar Deuda';
             openModal('modal-add-debt');
         }
 
         function deleteDebt(debtorId, debtId) {
-            const debtor = debtors.find(d => d.id === debtorId);
-            if (!debtor) return;
-
-            const debtIndex = debtor.debts.findIndex(d => d.id === debtId);
-            if (debtIndex === -1) return;
-
-            const [deletedDebt] = debtor.debts.splice(debtIndex, 1);
-            
-            trash.push({
-                type: 'debt',
-                debtorId,
-                debtorName: debtor.name,
-                item: deletedDebt,
-                deletedAt: new Date().toISOString()
+            const d = debtors.find(x => x.id === debtorId);
+            const x = d && d.debts.find(y => y.id === debtId);
+            if (!x) return;
+            act('Cobro de ' + x.highway + ' enviado a papelera', () => {
+                d.debts = d.debts.filter(y => y.id !== debtId);
+                trash.push({ type: 'debt', debtorId, debtorName: d.name, monthKey: getMonthKey(currentYear, currentMonth), item: x, deletedAt: new Date().toISOString() });
             });
-
-            lastAction = {
-                type: 'RESTORE_DEBT',
-                debtorId,
-                debt: deletedDebt,
-                index: debtIndex
-            };
-
-            saveState();
-            renderApp();
-            showToast(`Cobro de ${deletedDebt.highway} enviado a papelera`, true);
         }
 
         function renderTrash() {
-            const container = document.getElementById('trash-container');
+            const box = document.getElementById('trash-container');
             const badge = document.getElementById('trash-badge');
-            
-            if (trash.length > 0) {
-                badge.textContent = trash.length;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-
-            if (trash.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-slate-400">
-                        <i class="fa-solid fa-trash text-3xl mb-2 text-slate-300"></i>
-                        <p class="text-xs font-semibold">La papelera está vacía</p>
-                    </div>
-                `;
+            badge.textContent = trash.length;
+            badge.classList.toggle('hidden', trash.length === 0);
+            if (!trash.length) {
+                box.innerHTML = '<div class="text-center py-8 text-slate-400"><i class="fa-solid fa-trash text-3xl mb-2 text-slate-300"></i><p class="text-xs font-semibold">La papelera está vacía</p></div>';
                 return;
             }
-
-            container.innerHTML = trash.map((tItem, index) => `
+            box.innerHTML = trash.map((t, i) => `
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-2">
                     <div class="min-w-0">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Cobro de ${tItem.debtorName}</span>
-                        <h4 class="font-bold text-xs text-slate-800 truncate">${tItem.item.highway}</h4>
-                        <span class="text-xs font-extrabold text-tagRed">${formatCLP(tItem.item.amount)}</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase block">${esc(t.debtorName)}${t.monthKey ? ', ' + monthLabel(t.monthKey) : ''}</span>
+                        <h4 class="font-bold text-xs text-slate-800 truncate">${esc(t.item.highway)}</h4>
+                        <span class="text-xs font-extrabold text-tagRed">${formatCLP(t.item.amount)}</span>
                     </div>
-                    <button onclick="restoreFromTrash(${index})" class="px-3 py-1.5 bg-tagBlue text-white text-xs font-semibold rounded-xl hover:bg-blue-800 transition shadow-xs flex items-center gap-1 shrink-0">
-                        <i class="fa-solid fa-rotate-left"></i> Restaurar
-                    </button>
-                </div>
-            `).join('');
+                    <button onclick="restoreFromTrash(${i})" class="px-3 py-1.5 bg-tagBlue text-white text-xs font-semibold rounded-xl hover:bg-blue-800 transition flex items-center gap-1 shrink-0"><i class="fa-solid fa-rotate-left"></i> Restaurar</button>
+                </div>`).join('');
         }
 
         function restoreFromTrash(index) {
-            const restored = trash.splice(index, 1)[0];
-            if (restored) {
-                const debtor = debtors.find(d => d.id === restored.debtorId);
-                if (debtor) {
-                    debtor.debts.push(restored.item);
+            const t = trash[index];
+            if (!t) return;
+            const mk = t.monthKey || getMonthKey(currentYear, currentMonth);
+            act('Cobro restaurado en ' + monthLabel(mk), () => {
+                trash.splice(index, 1);
+                if (!Array.isArray(monthlyData[mk])) monthlyData[mk] = [];
+                let d = monthlyData[mk].find(x => x.id === t.debtorId);
+                if (!d) {
+                    const any = Object.values(monthlyData).flat().find(x => x && x.id === t.debtorId);
+                    d = { id: t.debtorId, name: t.debtorName, plate: any ? any.plate : '', debts: [] };
+                    monthlyData[mk].push(d);
                 }
-            }
-            saveState();
-            renderApp();
-            showToast("Elemento restaurado con éxito", false);
+                d.debts.push(t.item);
+            });
         }
 
         function emptyTrash() {
-            if (trash.length === 0) return;
-            trash = [];
-            saveState();
-            renderTrash();
-            renderMetrics();
-            showToast("Papelera vaciada completamente", false);
+            if (!trash.length) return;
+            act('Papelera vaciada', () => { trash = []; });
         }
 
         function copyWhatsAppSummary(debtorId) {
@@ -1632,67 +1524,316 @@
         }
 
         function executeUndo() {
-            if (!lastAction) return;
-
-            if (lastAction.type === 'RESTORE_DEBT') {
-                const debtor = debtors.find(d => d.id === lastAction.debtorId);
-                if (debtor) {
-                    debtor.debts.splice(lastAction.index, 0, lastAction.debt);
-                    const tIdx = trash.findIndex(t => t.item.id === lastAction.debt.id);
-                    if (tIdx !== -1) trash.splice(tIdx, 1);
-                }
-            }
-
+            if (!lastAction || !lastAction.snap) return;
+            const snap = JSON.parse(lastAction.snap);
+            monthlyData = snap.m; trash = snap.t;
+            const keep = openDebtorId;
+            loadCurrentMonthDebtors();
+            if (debtors.some(d => d.id === keep)) openDebtorId = keep;
             lastAction = null;
             saveState();
             renderApp();
-            showToast("Acción deshecha", false);
+            showToast('Acción deshecha', false);
         }
 
         function showToast(message, canUndo = false) {
-            const container = document.getElementById('toast-container');
-            const msgEl = document.getElementById('toast-message');
-            const undoBtn = document.getElementById('toast-undo-btn');
+            const box = document.getElementById('toast-container');
+            document.getElementById('toast-message').textContent = message;
+            document.getElementById('toast-undo-btn').classList.toggle('hidden', !(canUndo && lastAction));
+            clearTimeout(window._toastTimer);
+            clearTimeout(window._toastHide);
+            resetToastStyle();
+            const visible = !box.classList.contains('hidden') && !box.classList.contains('toast-out');
+            box.classList.remove('hidden', 'toast-out', 'toast-in', 'toast-bump');
+            void box.offsetWidth;
+            box.classList.add(visible ? 'toast-bump' : 'toast-in');   // aparece, o "late" si ya estaba visible
+            window._toastTimer = setTimeout(hideToast, canUndo ? 6000 : 3500);
+        }
 
-            msgEl.textContent = message;
+        function resetToastStyle() {
+            const el = document.getElementById('toast-container').firstElementChild;
+            ['animation', 'transition', 'transform', 'opacity'].forEach(p => { el.style[p] = ''; });
+        }
 
-            if (canUndo && lastAction) {
-                undoBtn.classList.remove('hidden');
-            } else {
-                undoBtn.classList.add('hidden');
-            }
+        // El banner se puede quitar deslizándolo hacia los lados o hacia abajo
+        function setupToastSwipe() {
+            const box = document.getElementById('toast-container');
+            const el = box.firstElementChild;
+            let sx = 0, sy = 0, dx = 0, dy = 0, drag = false;
 
-            container.classList.remove('hidden');
+            el.addEventListener('pointerdown', (e) => {
+                if (e.target.closest('button')) return;           // el botón de deshacer sigue funcionando
+                drag = true; sx = e.clientX; sy = e.clientY; dx = 0; dy = 0;
+                clearTimeout(window._toastTimer); clearTimeout(window._toastHide);
+                el.style.animation = 'none'; el.style.transition = 'none';
+                if (el.setPointerCapture && e.pointerId != null) { try { el.setPointerCapture(e.pointerId); } catch (err) {} }
+            });
+            el.addEventListener('pointermove', (e) => {
+                if (!drag) return;
+                dx = e.clientX - sx;
+                dy = Math.max(0, e.clientY - sy);                 // hacia abajo sí, hacia arriba no
+                el.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0)';
+                el.style.opacity = String(1 - Math.min(Math.hypot(dx, dy) / 240, 0.85));
+            });
+            const end = () => {
+                if (!drag) return;
+                drag = false;
+                if (Math.abs(dx) > 70 || dy > 40) {                // se va volando hacia donde lo arrastraste
+                    const horizontal = Math.abs(dx) >= dy;
+                    const ox = horizontal ? Math.sign(dx || 1) * window.innerWidth : dx;
+                    const oy = horizontal ? dy : 140;
+                    el.style.transition = 'transform .22s ease-in, opacity .22s ease-in';
+                    el.style.transform = 'translate3d(' + ox + 'px,' + oy + 'px,0)';
+                    el.style.opacity = '0';
+                    window._toastHide = setTimeout(() => {
+                        box.classList.add('hidden');
+                        box.classList.remove('toast-in', 'toast-out', 'toast-bump');
+                        resetToastStyle();
+                    }, 230);
+                } else {                                           // gesto corto: vuelve a su lugar y sigue su cuenta
+                    el.style.transition = 'transform .2s ease, opacity .2s ease';
+                    el.style.transform = 'translate3d(0,0,0)';
+                    el.style.opacity = '1';
+                    setTimeout(resetToastStyle, 210);
+                    window._toastTimer = setTimeout(hideToast, 2500);
+                }
+            };
+            el.addEventListener('pointerup', end);
+            el.addEventListener('pointercancel', end);
+        }
 
-            setTimeout(() => {
-                container.classList.add('hidden');
-            }, 4000);
+        function hideToast() {
+            const box = document.getElementById('toast-container');
+            if (box.classList.contains('hidden')) return;
+            resetToastStyle();
+            box.classList.remove('toast-in', 'toast-bump');
+            box.classList.add('toast-out');                            // desaparece suave
+            clearTimeout(window._toastHide);
+            window._toastHide = setTimeout(() => { box.classList.add('hidden'); box.classList.remove('toast-out'); }, 230);
         }
 
         function openModal(id) {
-            if (id === 'modal-add-debt' && !document.getElementById('debt-edit-id').value) {
-                document.getElementById('form-add-debt').reset();
-                removeSelectedImage();
-                document.getElementById('modal-debt-title').innerHTML = `<i class="fa-solid fa-receipt text-tagBlue"></i> Cargar Nueva Deuda`;
-            }
-            if (id === 'modal-year-grid') {
-                renderYearMonthsGrid();
-            }
-            if (id === 'modal-stats') {
-                renderStatsModal();
-            }
+            if (id === 'modal-year-grid') { gridYear = currentYear; renderYearMonthsGrid(true); }
+            if (id === 'modal-stats') renderStatsModal();
             document.getElementById(id).classList.remove('hidden');
             document.body.classList.add('modal-open');
+            syncNav();
         }
 
         function closeModal(id) {
             document.getElementById(id).classList.add('hidden');
-            
-            const openModals = document.querySelectorAll('.fixed.z-50:not(.hidden)');
-            if (openModals.length === 0) {
-                document.body.classList.remove('modal-open');
-            }
+            if (!document.querySelector('.fixed.z-50:not(.hidden)')) document.body.classList.remove('modal-open');
+            syncNav();
         }
+
+        // ===== MEJORAS =====
+        const qs = s => document.querySelector(s), qsa = s => [...document.querySelectorAll(s)];
+        const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const nPlate = p => String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const nrm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const DEB_COLORS = ['#003399', '#da291c', '#0e7490', '#7c3aed', '#d97706', '#15803d', '#be185d', '#475569'];
+        const HW = ['Autopista Central', 'Costanera Norte', 'Vespucio Sur', 'Vespucio Norte', 'AVO (Américo Vespucio Oriente)', 'Autopista Nororiente', 'Túnel San Cristóbal', 'Autopista del Sol', 'Autopista del Maipo', 'Ruta del Maipo', 'Survías (Ruta 5 Sur)', 'Autopista Los Libertadores', 'Autopista del Aconcagua', 'Nogales-Puchuncaví', 'Ruta 68 (Santiago - Valparaíso)', 'Ruta 78', 'Ruta 5 Norte', 'Ruta 5 Sur', 'Ruta 66 (Ruta de la Fruta)', 'Ruta 160', 'Concepción-Cabrero', 'Acceso Norte a Concepción', 'Talca-Chillán', 'Chillán-Collipulli', 'Collipulli-Temuco', 'Temuco-Río Bueno', 'Río Bueno-Puerto Montt', 'Autopista Interportuaria', 'Pase Diario Unificado'];
+
+        function syncNav() {
+            const anyOpen = !!document.querySelector('.fixed.z-50:not(.hidden)');
+            document.querySelectorAll('#bottom-main-nav .dk[data-m]').forEach(b => {
+                const el = b.dataset.m && document.getElementById(b.dataset.m);
+                b.classList.toggle('on', b.dataset.m ? !!el && !el.classList.contains('hidden') : !anyOpen);
+            });
+        }
+
+        function monthLabel(key) {
+            const [y, m] = key.split('-').map(Number);
+            return new Date(y, m - 1, 1).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
+        }
+
+        // Toda acción pasa por act(): guarda, redibuja y permite deshacer
+        function act(msg, fn) {
+            const snap = JSON.stringify({ m: monthlyData, t: trash });
+            fn();
+            saveState();
+            renderApp();
+            lastAction = { snap };
+            showToast(msg, true);
+        }
+
+        function shrinkImage(file, max = 1100) {
+            return new Promise((ok, er) => {
+                const r = new FileReader();
+                r.onload = () => {
+                    const i = new Image();
+                    i.onload = () => {
+                        const k = Math.min(1, max / Math.max(i.width, i.height));
+                        const c = document.createElement('canvas');
+                        c.width = Math.round(i.width * k); c.height = Math.round(i.height * k);
+                        c.getContext('2d').drawImage(i, 0, 0, c.width, c.height);
+                        ok(c.toDataURL('image/jpeg', 0.72));
+                    };
+                    i.onerror = er; i.src = r.result;
+                };
+                r.onerror = er; r.readAsDataURL(file);
+            });
+        }
+        function setPreview(url) {
+            qs('#debt-image-url').value = url;
+            qs('#image-preview').src = url;
+            qs('#image-preview-container').classList.remove('hidden');
+        }
+        async function loadImage(file) {
+            try { setPreview(await compressImage(file, 1100, 0.72)); } catch (e) { showToast('No se pudo leer la imagen', false); }
+        }
+        function viewDebtImage(did, id) {
+            const d = debtors.find(x => x.id === did);
+            const x = d && d.debts.find(y => y.id === id);
+            if (x && x.image) viewImage(x.image);
+        }
+
+        // Sugerencias de autopistas de Chile al escribir
+        function attachSuggest(inp) {
+            const box = document.createElement('div');
+            box.className = 'sg'; box.hidden = true;
+            inp.parentNode.appendChild(box);
+            const show = () => {
+                const v = nrm(inp.value.trim());
+                const used = Object.values(monthlyData).flat().flatMap(d => (d && d.debts || []).map(x => x.highway));
+                const all = [...new Set([...HW, ...used].filter(Boolean))];
+                const m = all.filter(h => !v || nrm(h).includes(v)).sort((a, b) => (nrm(a).startsWith(v) ? 0 : 1) - (nrm(b).startsWith(v) ? 0 : 1)).filter(h => nrm(h) !== v).slice(0, 6);
+                box.innerHTML = m.map(h => `<button type="button">${esc(h)}</button>`).join('');
+                box.hidden = !m.length;
+                box.querySelectorAll('button').forEach((b, i) => b.onclick = () => {
+                    inp.value = m[i]; box.hidden = true;
+                    const a = inp.closest('.dl').querySelector('.dl-amt'); a.focus();
+                });
+            };
+            inp.addEventListener('input', show);
+            inp.addEventListener('focus', show);
+            inp.addEventListener('blur', () => setTimeout(() => { box.hidden = true; }, 250));
+        }
+        function addDebtLine(hw = '', amt = '') {
+            const w = document.createElement('div');
+            w.className = 'dl flex items-start gap-2';
+            const F = 'w-full py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-tagBlue focus:outline-none text-sm';
+            w.innerHTML = `<div class="relative flex-1 min-w-0"><input type="text" class="dl-hw ${F} px-3 font-medium" placeholder="Autopista" value="${esc(hw)}" autocomplete="off"></div>
+                <div class="relative w-28 shrink-0"><span class="absolute left-3 top-2.5 text-slate-400 font-bold">$</span><input type="number" min="1" step="any" inputmode="numeric" class="dl-amt ${F} pl-7 pr-2 font-semibold" placeholder="Monto" value="${amt}"></div>
+                <button type="button" class="dl-rm w-9 h-10 text-slate-400 hover:text-tagRed shrink-0" title="Quitar"><i class="fa-solid fa-xmark"></i></button>`;
+            qs('#debt-lines').appendChild(w);
+            attachSuggest(w.querySelector('.dl-hw'));
+            w.querySelector('.dl-rm').onclick = () => {
+                if (qsa('#debt-lines .dl').length > 1) w.remove(); else w.querySelectorAll('input').forEach(i => i.value = '');
+            };
+            return w;
+        }
+        function resetDebtForm() {
+            qs('#debt-edit-id').value = '';
+            const sel = qs('#debt-debtor-id'); sel.disabled = false;
+            qs('#debt-lines').innerHTML = '';
+            addDebtLine();
+            qs('#btn-add-line').classList.remove('hidden');
+            removeSelectedImage();
+            qs('#modal-debt-title').innerHTML = '<i class="fa-solid fa-receipt text-tagBlue"></i> Cargar Nueva Deuda';
+        }
+        // El deudor ya no se elige en el formulario: es el de la tarjeta desde la que se abre
+        function updateDebtFor() {
+            const d = debtors.find(x => x.id === qs('#debt-debtor-id').value);
+            qs('#debt-for').innerHTML = d ? '<i class="fa-solid fa-user mr-1"></i> ' + esc(d.name) + ' (' + esc(d.plate) + ')' : '';
+        }
+
+        // Credenciales: primero las del navegador; si no hay, las incrustadas en el archivo
+        function getSupabaseCreds() {
+            const lu = localStorage.getItem('tag_supabase_url') || '', lk = localStorage.getItem('tag_supabase_key') || '';
+            if (lu && lk) return { url: lu, key: lk, source: 'browser' };
+            if (SUPABASE_FIXED.url && SUPABASE_FIXED.key && localStorage.getItem('tag_supabase_off') !== '1') {
+                return { url: SUPABASE_FIXED.url, key: SUPABASE_FIXED.key, source: 'file' };
+            }
+            return { url: '', key: '', source: '' };
+        }
+
+        // Descarga una copia de este mismo archivo con las credenciales ya escritas dentro
+        async function downloadHtmlWithCredentials() {
+            const url = document.getElementById('supabase-url').value.trim();
+            const key = document.getElementById('supabase-key').value.trim();
+            if (!url || !key) { showToast('Escribe primero el URL y la Anon Key', false); return; }
+            let src = '';
+            try {
+                const r = await fetch(location.href, { cache: 'no-store' });
+                if (!r.ok) throw new Error('http ' + r.status);
+                src = await r.text();
+            } catch (e) {
+                showToast('Desde un archivo local no puedo leerme: ábrelo desde tu hosting o pega las credenciales en SUPABASE_FIXED', false);
+                return;
+            }
+            const re = /const SUPABASE_FIXED = \{[^}]*\};/;
+            if (!re.test(src)) { showToast('No encontré SUPABASE_FIXED en el archivo', false); return; }
+            const out = src.replace(re, () => 'const SUPABASE_FIXED = { url: ' + JSON.stringify(url) + ', key: ' + JSON.stringify(key) + ' };');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([out], { type: 'text/html;charset=utf-8' }));
+            a.download = 'index.html';
+            document.body.appendChild(a); a.click(); a.remove();
+            showToast('Listo: reemplaza tu archivo por esta copia y se conectará solo en cualquier lugar', false);
+        }
+
+        // Teclado: lleva la vista al campo que se escribe; flechas cambian de mes en PC
+        document.addEventListener('focusin', e => {
+            if (e.target.matches('input,select,textarea')) setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+        });
+        if (window.visualViewport) {
+            let base = visualViewport.height;
+            visualViewport.addEventListener('resize', () => {
+                base = Math.max(base, visualViewport.height);
+                const a = document.activeElement;
+                document.body.classList.toggle('kb', visualViewport.height < base * 0.75 && !!a && a.matches('input'));
+            });
+        }
+        document.addEventListener('keydown', e => {
+            const t = (document.activeElement || {}).tagName || '';
+            if (document.body.classList.contains('modal-open') || /INPUT|TEXTAREA|SELECT/.test(t)) return;
+            if (e.key === 'ArrowLeft') changeMonth(-1);
+            if (e.key === 'ArrowRight') changeMonth(1);
+        });
+        // ===== EFECTO AL CAMBIAR DE MES =====
+        let monthBusy = false;
+        let gridYear = null;
+        function shiftGridYear(delta) {
+            gridYear = (gridYear == null ? currentYear : gridYear) + delta;
+            renderYearMonthsGrid(true);
+        }
+        // El contenido sale hacia un lado y el del nuevo mes entra desde el otro
+        function slideMonth(delta, apply) {
+            const w = document.getElementById('swipe-animated-wrapper');
+            const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!w || reduced) { apply(); return; }
+            monthBusy = true;
+            const s = delta > 0 ? -1 : 1;
+            w.style.transition = 'transform .1s ease-in, opacity .1s ease-in';
+            w.style.transform = 'translate3d(' + (s * 56) + 'px,0,0)';
+            w.style.opacity = '0';
+            setTimeout(() => {
+                apply();
+                w.style.transition = 'none';
+                w.style.transform = 'translate3d(' + (-s * 56) + 'px,0,0)';
+                w.style.opacity = '0';
+                void w.offsetWidth;
+                w.style.transition = 'transform .22s cubic-bezier(.22,1,.36,1), opacity .2s ease-out';
+                w.style.transform = 'translate3d(0,0,0)';
+                w.style.opacity = '1';
+                setTimeout(() => { w.style.transition = ''; w.style.transform = ''; w.style.opacity = ''; monthBusy = false; }, 230);
+            }, 100);
+        }
+        // Banner que avisa en qué mes estás al cambiar de mes
+        function monthToast() {
+            let name = new Date(currentYear, currentMonth, 1).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
+            name = name.charAt(0).toUpperCase() + name.slice(1);
+            const total = debtors.reduce((acc, d) => acc + d.debts.reduce((x, y) => x + (Number(y.amount) || 0), 0), 0);
+            showToast(total > 0 ? name + ', total ' + formatCLP(total) : name + ', sin cobros', false);
+        }
+        function popMonth() {
+            const el = document.getElementById('current-month-display');
+            if (!el) return;
+            el.classList.remove('month-pop');
+            void el.offsetWidth;
+            el.classList.add('month-pop');
+        }
+        setupToastSwipe();
     </script>
 </body>
 </html>
