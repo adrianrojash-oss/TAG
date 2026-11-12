@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#003399">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TAG Deudas">
     <title>Gestor de Deudas TAG - Autopistas de Chile</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -160,6 +166,80 @@
         @media(prefers-reduced-motion:reduce){#toast-container>div{animation:none!important}}
         .grid-in{animation:gridIn .24s ease-out}
         @keyframes gridIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+        /* ===== ESTILOS DE MENÚ ELEGIBLES (se cambian con el botón de paleta) ===== */
+        #bottom-main-nav .dock{position:relative}
+        #bottom-main-nav .ind{display:none}
+        /* 1. Indicador deslizante */
+        #bottom-main-nav[data-style="indicador"] .ind{display:block;position:absolute;top:4px;bottom:4px;left:0;width:0;border-radius:22px;background:#003399;transition:transform .34s cubic-bezier(.22,1,.36,1),width .34s cubic-bezier(.22,1,.36,1);z-index:0;pointer-events:none}
+        #bottom-main-nav[data-style="indicador"] .dk{z-index:1}
+        #bottom-main-nav[data-style="indicador"] .dk:hover{background:none}
+        #bottom-main-nav[data-style="indicador"] .dk.on,#bottom-main-nav[data-style="indicador"] #dock-nube.on{color:#fff;background:transparent}
+        #bottom-main-nav[data-style="indicador"] .dk.on::after{display:none}
+        /* 2. Burbuja elevada */
+        #bottom-main-nav[data-style="burbuja"]{padding:0}
+        #bottom-main-nav[data-style="burbuja"] .dock{max-width:none;margin:0;border-radius:0;border:0;border-top:1px solid #e2e8f0;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 -2px 12px rgba(15,23,42,.07);padding:8px 4px max(6px,env(safe-area-inset-bottom));align-items:flex-end}
+        #bottom-main-nav[data-style="burbuja"] .dk{padding:6px 1px 2px;background:transparent!important}
+        #bottom-main-nav[data-style="burbuja"] .dk i{width:30px;height:30px;display:grid;place-items:center;transition:transform .3s cubic-bezier(.22,1,.36,1),background .2s,color .2s}
+        #bottom-main-nav[data-style="burbuja"] .dk>span:not(.bd){opacity:0;transition:opacity .2s}
+        #bottom-main-nav[data-style="burbuja"] .dk.on i{transform:translateY(-14px) scale(1.4);background:#003399;color:#fff;border-radius:50%;box-shadow:0 0 0 3px #f8fafc,0 6px 12px rgba(0,51,153,.35)}
+        #bottom-main-nav[data-style="burbuja"] .dk.on>span:not(.bd){opacity:1;color:#003399}
+        #bottom-main-nav[data-style="burbuja"] .dk.on::after{display:none}
+        /* 3. Vidrio oscuro */
+        #bottom-main-nav[data-style="vidrio"] .dock{background:rgba(15,23,42,.58);-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5);border:1px solid rgba(255,255,255,.2);box-shadow:0 14px 34px rgba(15,23,42,.35)}
+        #bottom-main-nav[data-style="vidrio"] .dk{color:rgba(255,255,255,.75)}
+        #bottom-main-nav[data-style="vidrio"] .dk:hover{background:rgba(255,255,255,.1)}
+        #bottom-main-nav[data-style="vidrio"] .dk.on{color:#fff;background:rgba(255,255,255,.2)}
+        #bottom-main-nav[data-style="vidrio"] .dk.on::after{background:#fff}
+        #bottom-main-nav[data-style="vidrio"] #dock-nube[data-st="synced"]{color:#6ee7b7;background:transparent}
+        #bottom-main-nav[data-style="vidrio"] #dock-nube[data-st="connecting"]{color:#fcd34d;background:transparent}
+        #bottom-main-nav[data-style="vidrio"] #dock-nube[data-st="saving"]{color:#93c5fd;background:transparent}
+        #bottom-main-nav[data-style="vidrio"] #dock-nube[data-st="error"]{color:#fca5a5;background:transparent}
+        #bottom-main-nav[data-style="vidrio"] #dock-nube[data-st="disconnected"]{color:rgba(255,255,255,.75)}
+        #bottom-main-nav[data-style="vidrio"] .dk .bd{border-color:#334155}
+        /* 4. Riel lateral (solo PC; en celular queda como el dock) */
+        @media(min-width:1024px){
+            body[data-menu="riel"]{padding-left:72px}
+            #bottom-main-nav[data-style="riel"]{top:0;bottom:0;left:0;right:auto;width:72px;padding:0}
+            #bottom-main-nav[data-style="riel"] .dock{height:100%;max-width:none;margin:0;flex-direction:column;justify-content:flex-start;gap:6px;border-radius:0;border:0;border-right:1px solid #e2e8f0;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;padding:78px 10px 14px}
+            #bottom-main-nav[data-style="riel"] .dk{flex:none;width:100%;height:46px;flex-direction:row;justify-content:center;padding:0;border-radius:14px}
+            #bottom-main-nav[data-style="riel"] .dk i{font-size:19px}
+            #bottom-main-nav[data-style="riel"] .dk>span:not(.bd){position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);background:#0f172a;color:#fff;font-size:12px;padding:5px 10px;border-radius:8px;opacity:0;pointer-events:none;max-width:none;overflow:visible;white-space:nowrap;transition:opacity .15s;z-index:5}
+            #bottom-main-nav[data-style="riel"] .dk:hover>span:not(.bd){opacity:1}
+            #bottom-main-nav[data-style="riel"] .dk.on{background:#e6edff}
+            #bottom-main-nav[data-style="riel"] .dk.on::after{left:-10px;bottom:auto;top:12px;width:3px;height:22px;border-radius:2px}
+            #bottom-main-nav[data-style="riel"] .dk .bd{left:auto;right:4px;top:4px}
+        }
+        /* 5. Cajón en cuadrícula */
+        #bottom-main-nav[data-style="cajon"]{display:none}
+        #menu-fab{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom));z-index:45;height:46px;padding:0 24px;border-radius:23px;background:#003399;color:#fff;font-weight:700;font-size:13px;align-items:center;gap:8px;box-shadow:0 10px 24px rgba(0,51,153,.4);border:0;transition:transform .15s}
+        body[data-menu="cajon"] #menu-fab{display:flex}
+        body.kb #menu-fab,body.modal-open #menu-fab{display:none!important}
+        #menu-fab:active{transform:translateX(-50%) scale(.95)}
+        #menu-fab .bd{position:absolute;top:-5px;right:-3px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#da291c;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+        #menu-fab .bd.hidden{display:none}
+        #menu-sheet{position:fixed;inset:0;z-index:56;display:flex;align-items:flex-end;justify-content:center;background:rgba(15,23,42,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:msFade .2s ease-out}
+        #menu-sheet.hidden{display:none}
+        #menu-sheet .panel{width:100%;max-width:480px;background:#fff;border-radius:24px 24px 0 0;padding:14px 14px max(18px,env(safe-area-inset-bottom));animation:msUp .3s cubic-bezier(.22,1,.36,1)}
+        @media(min-width:640px){#menu-sheet{align-items:center}#menu-sheet .panel{border-radius:24px}}
+        #menu-sheet .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+        .ms-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 4px 10px;border-radius:16px;background:#f1f5f9;color:#0f172a;font-size:11px;font-weight:600;transition:transform .15s}
+        .ms-tile:active{transform:scale(.93)}
+        .ms-tile i{font-size:21px;color:#003399}
+        .ms-tile[data-st="synced"]{background:#ecfdf5}.ms-tile[data-st="synced"] i{color:#059669}
+        .ms-tile[data-st="connecting"]{background:#fffbeb}.ms-tile[data-st="connecting"] i{color:#d97706}
+        .ms-tile[data-st="saving"]{background:#eff6ff}.ms-tile[data-st="saving"] i{color:#2563eb}
+        .ms-tile[data-st="error"]{background:#fef2f2}.ms-tile[data-st="error"] i{color:#dc2626}
+        .ms-tile .bd{position:absolute;top:4px;right:8px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#da291c;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+        @keyframes msFade{from{opacity:0}to{opacity:1}}
+        @keyframes msUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+        /* 6. Línea superior */
+        #bottom-main-nav[data-style="linea"]{padding:0}
+        #bottom-main-nav[data-style="linea"] .dock{max-width:none;margin:0;border-radius:0;border:0;border-top:1px solid #e2e8f0;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 -2px 12px rgba(15,23,42,.06);padding:0 4px max(6px,env(safe-area-inset-bottom))}
+        #bottom-main-nav[data-style="linea"] .dk{padding:11px 1px 5px;border-radius:0}
+        #bottom-main-nav[data-style="linea"] .dk:hover{background:transparent}
+        #bottom-main-nav[data-style="linea"] .dk::before{content:"";position:absolute;top:-1px;left:22%;right:22%;height:3px;border-radius:0 0 3px 3px;background:#003399;transform:scaleX(0);transition:transform .28s cubic-bezier(.22,1,.36,1)}
+        #bottom-main-nav[data-style="linea"] .dk.on::before{transform:scaleX(1)}
+        #bottom-main-nav[data-style="linea"] .dk.on::after{display:none}
     </style>
 </head>
 <body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between bg-slate-50 relative w-full">
@@ -182,6 +262,8 @@
             
             <!-- BADGE DE ESTADO NUBE UBICADO EN LA CABECERA AZUL -->
             <div class="flex items-center gap-2">
+                <button id="install-btn" onclick="installApp()" class="hidden bg-amber-400 hover:bg-amber-300 text-slate-900 h-8 px-2.5 rounded-xl shadow-inner items-center gap-1.5 text-[11px] font-extrabold transition" title="Instalar como app"><i class="fa-solid fa-download text-xs"></i><span class="hidden sm:inline">Instalar</span></button>
+                <button onclick="openModal('modal-menu-style')" class="bg-slate-900/80 hover:bg-slate-900 text-white w-8 h-8 rounded-xl shadow-inner border border-white/10 flex items-center justify-center transition" title="Elegir estilo del menú"><i class="fa-solid fa-palette text-xs text-amber-300"></i></button>
                 <button onclick="openModal('modal-supabase')" id="supabase-status-btn" class="bg-slate-900/80 hover:bg-slate-900 text-white px-2.5 py-1.5 rounded-xl shadow-inner border border-white/10 flex items-center gap-1.5 transition text-xs font-semibold" title="Configurar Supabase">
                     <i class="fa-solid fa-cloud text-slate-400 text-sm transition-colors duration-300" id="supabase-icon"></i>
                     <span id="supabase-status-text" class="hidden sm:inline text-[10px] text-slate-300 font-medium">Sin configurar</span>
@@ -256,7 +338,7 @@
     </main>
 
     <!-- MENÚ NAVEGACIÓN INFERIOR MODERNO -->
-    <nav id="bottom-main-nav" class="fixed-bottom-nav"><div class="dock">
+    <nav id="bottom-main-nav" class="fixed-bottom-nav" data-style="dock"><div class="dock"><span class="ind"></span>
         <button class="dk on" data-m="" onclick="goToLatestMonthWithData()" title="Ir al último mes con datos"><i class="fa-solid fa-house"></i><span>Inicio</span></button>
         <button class="dk" data-m="modal-year-grid" onclick="openModal('modal-year-grid')" title="Ver meses del año"><i class="fa-solid fa-calendar-days"></i><span>Meses</span></button>
         <button class="dk" data-m="modal-stats" onclick="openModal('modal-stats')" title="Estadísticas y resumen"><i class="fa-solid fa-chart-column"></i><span>Stats</span></button>
@@ -501,6 +583,47 @@
             <button id="toast-undo-btn" onclick="executeUndo()" class="hidden bg-tagBlue hover:bg-blue-600 text-white w-7 h-7 rounded-lg flex items-center justify-center transition shadow shrink-0" title="Deshacer acción">
                 <i class="fa-solid fa-rotate-left text-xs"></i>
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL: INSTALAR COMO APP -->
+    <div id="modal-install" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-24 sm:pb-3 hidden">
+        <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-install')"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden z-10 border border-slate-100">
+            <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+                <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-download text-amber-300"></i> Instalar como app</h3>
+                <button onclick="closeModal('modal-install')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-5 flex items-start gap-3 bg-slate-50 border-b border-slate-100">
+                <img src="data:image/png;base64,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" alt="Ícono de la app" class="w-14 h-14 rounded-2xl shadow shrink-0">
+                <p class="text-xs text-slate-600 leading-relaxed">Se abre desde la pantalla de inicio, sin barra del navegador, a pantalla completa y con acceso directo como cualquier otra app.</p>
+            </div>
+            <div id="install-help" class="p-5 text-sm text-slate-700 space-y-3 max-h-[55vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- MENÚ EN CUADRÍCULA (estilo "Cajón") -->
+    <button id="menu-fab" onclick="openMenuSheet()" aria-label="Abrir menú"><i class="fa-solid fa-grip"></i><span>Menú</span><span id="menu-fab-badge" class="bd hidden">0</span></button>
+    <div id="menu-sheet" class="hidden" onclick="if(event.target===this)closeMenuSheet()">
+        <div class="panel">
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-grip text-tagBlue"></i> Menú</h3>
+                <button onclick="closeMenuSheet()" class="text-slate-400 hover:text-slate-700 transition w-8 h-8"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="menu-sheet-grid" class="grid4"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: ELEGIR ESTILO DE MENÚ -->
+    <div id="modal-menu-style" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-24 sm:pb-3 hidden">
+        <div class="absolute inset-0 modal-backdrop" onclick="closeModal('modal-menu-style')"></div>
+        <div class="relative bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden z-10 border border-slate-100">
+            <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+                <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-palette text-amber-300"></i> Estilo del menú</h3>
+                <button onclick="closeModal('modal-menu-style')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="menu-style-list" class="p-3 space-y-2 bg-slate-50 max-h-[70vh] overflow-y-auto"></div>
+            <p class="px-4 py-2.5 text-[10px] text-slate-400 text-center bg-white border-t border-slate-100">Se aplica al instante y queda guardado en este dispositivo.</p>
         </div>
     </div>
 
@@ -1640,6 +1763,7 @@
                 const el = b.dataset.m && document.getElementById(b.dataset.m);
                 b.classList.toggle('on', b.dataset.m ? !!el && !el.classList.contains('hidden') : !anyOpen);
             });
+            moveIndicator();
         }
 
         function monthLabel(key) {
@@ -1833,6 +1957,178 @@
             void el.offsetWidth;
             el.classList.add('month-pop');
         }
+
+        // ===== ESTILOS DE MENÚ ELEGIBLES =====
+        const MENU_STYLES = [
+            { id: 'dock', name: 'Dock flotante', desc: 'El de siempre: barra redondeada con efecto vidrio claro.', ic: 'fa-window-minimize' },
+            { id: 'indicador', name: 'Indicador deslizante', desc: 'Una píldora azul se desliza hacia la opción que tocas.', ic: 'fa-arrows-left-right' },
+            { id: 'burbuja', name: 'Burbuja elevada', desc: 'La opción activa sube en un círculo azul y muestra su nombre.', ic: 'fa-circle-up' },
+            { id: 'vidrio', name: 'Vidrio oscuro', desc: 'Barra flotante oscura y translúcida, con íconos claros.', ic: 'fa-moon' },
+            { id: 'riel', name: 'Riel lateral (PC)', desc: 'En computador pasa a una tira vertical a la izquierda. En celular queda como el dock.', ic: 'fa-table-columns' },
+            { id: 'cajon', name: 'Cajón en cuadrícula', desc: 'Un solo botón Menú que abre todas las acciones en una cuadrícula.', ic: 'fa-grip' },
+            { id: 'linea', name: 'Línea superior', desc: 'Barra pegada abajo, con una línea azul sobre la opción activa.', ic: 'fa-minus' }
+        ];
+
+        function moveIndicator() {
+            const ind = document.querySelector('#bottom-main-nav .ind');
+            const on = document.querySelector('#bottom-main-nav .dk.on');
+            if (!ind || !on) return;
+            ind.style.width = on.offsetWidth + 'px';
+            ind.style.transform = 'translateX(' + on.offsetLeft + 'px)';
+        }
+
+        function applyMenuStyle(id, fromPicker) {
+            const st = MENU_STYLES.find(m => m.id === id) || MENU_STYLES[0];
+            document.getElementById('bottom-main-nav').dataset.style = st.id;
+            document.body.dataset.menu = st.id;
+            try { localStorage.setItem('tag_menu_style', st.id); } catch (e) {}
+            closeMenuSheet();
+            renderMenuPicker();
+            requestAnimationFrame(moveIndicator);
+            if (fromPicker) { closeModal('modal-menu-style'); showToast('Menú: ' + st.name, false); }
+        }
+
+        function renderMenuPicker() {
+            const cur = document.getElementById('bottom-main-nav').dataset.style;
+            document.getElementById('menu-style-list').innerHTML = MENU_STYLES.map(m => `
+                <button type="button" onclick="applyMenuStyle('${m.id}', true)" class="w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition active:scale-[.98] ${m.id === cur ? 'border-tagBlue bg-tagBlue/5 ring-1 ring-tagBlue' : 'border-slate-200 bg-white hover:bg-slate-100'}">
+                    <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${m.id === cur ? 'bg-tagBlue text-white' : 'bg-slate-100 text-slate-500'}"><i class="fa-solid ${m.ic}"></i></span>
+                    <span class="min-w-0 flex-1"><span class="block text-sm font-bold text-slate-800">${esc(m.name)}</span><span class="block text-[11px] text-slate-500 leading-snug">${esc(m.desc)}</span></span>
+                    ${m.id === cur ? '<i class="fa-solid fa-circle-check text-tagBlue"></i>' : ''}
+                </button>`).join('');
+        }
+
+        // Estilo "Cajón": arma la cuadrícula con las mismas acciones del menú
+        function openMenuSheet() {
+            const grid = document.getElementById('menu-sheet-grid');
+            grid.innerHTML = '';
+            document.querySelectorAll('#bottom-main-nav .dk').forEach(btn => {
+                const t = document.createElement('button');
+                t.type = 'button';
+                t.className = 'ms-tile';
+                const icon = btn.querySelector('i').className.replace(/animate-\w+/g, '').trim();
+                t.innerHTML = '<i class="' + icon + '"></i><span>' + esc(btn.querySelector('span').textContent) + '</span>';
+                if (btn.dataset.st) t.dataset.st = btn.dataset.st;
+                const bd = btn.querySelector('.bd');
+                if (bd && !bd.classList.contains('hidden')) t.insertAdjacentHTML('beforeend', '<span class="bd">' + esc(bd.textContent) + '</span>');
+                t.onclick = () => { closeMenuSheet(); btn.click(); };
+                grid.appendChild(t);
+            });
+            if (!isStandalone()) {
+                const ins = document.createElement('button');
+                ins.type = 'button'; ins.className = 'ms-tile';
+                ins.innerHTML = '<i class="fa-solid fa-download"></i><span>Instalar</span>';
+                ins.onclick = () => { closeMenuSheet(); installApp(); };
+                grid.appendChild(ins);
+            }
+            const sty = document.createElement('button');
+            sty.type = 'button'; sty.className = 'ms-tile';
+            sty.innerHTML = '<i class="fa-solid fa-palette"></i><span>Estilo</span>';
+            sty.onclick = () => { closeMenuSheet(); openModal('modal-menu-style'); };
+            grid.appendChild(sty);
+            document.getElementById('menu-sheet').classList.remove('hidden');
+        }
+        function closeMenuSheet() {
+            const sh = document.getElementById('menu-sheet');
+            if (sh) sh.classList.add('hidden');
+        }
+
+        (function initMenuStyles() {
+            const tb = document.getElementById('trash-badge');
+            const syncFab = () => {
+                const f = document.getElementById('menu-fab-badge');
+                f.textContent = tb.textContent;
+                f.classList.toggle('hidden', tb.classList.contains('hidden'));
+            };
+            new MutationObserver(syncFab).observe(tb, { attributes: true, childList: true, characterData: true, subtree: true });
+            syncFab();
+            let saved = 'dock';
+            try { saved = localStorage.getItem('tag_menu_style') || 'dock'; } catch (e) {}
+            applyMenuStyle(saved, false);
+            window.addEventListener('resize', moveIndicator);
+            window.addEventListener('load', moveIndicator);
+        })();
+
+        // ===== INSTALAR COMO APP (PWA) =====
+        let deferredInstall = null;
+        const isStandalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        function updateInstallUI() {
+            const b = document.getElementById('install-btn');
+            if (!b) return;
+            const show = !isStandalone();
+            b.classList.toggle('hidden', !show);
+            b.classList.toggle('flex', show);
+        }
+
+        async function installApp() {
+            if (deferredInstall) {
+                deferredInstall.prompt();
+                const choice = await deferredInstall.userChoice;
+                deferredInstall = null;
+                if (choice && choice.outcome === 'accepted') showToast('Instalando la app...', false);
+                return;
+            }
+            openInstallHelp();
+        }
+
+        function openInstallHelp() {
+            const step = (n, t) => '<div class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-tagBlue text-white text-xs font-extrabold flex items-center justify-center shrink-0">' + n + '</span><p class="leading-snug">' + t + '</p></div>';
+            let html = '';
+            if (location.protocol === 'file:') {
+                html = '<p class="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Estás abriendo el archivo directo desde el dispositivo. Para instalarlo, súbelo a un hosting con https (Netlify, GitHub Pages, Vercel o tu hosting) junto con <b>manifest.webmanifest</b>, <b>sw.js</b> y los íconos, y ábrelo desde ese enlace.</p>';
+            } else if (isIOS()) {
+                html = '<p class="text-xs font-bold text-slate-500 uppercase tracking-wider">iPhone / iPad (Safari)</p>'
+                    + step(1, 'Toca el botón <b>Compartir</b> <i class="fa-solid fa-arrow-up-from-bracket text-tagBlue"></i> de la barra de Safari.')
+                    + step(2, 'Baja y elige <b>Añadir a pantalla de inicio</b>.')
+                    + step(3, 'Toca <b>Añadir</b>. Listo: queda el ícono en tu pantalla.')
+                    + '<p class="text-[11px] text-slate-400">Si lo abriste desde otro navegador, ábrelo con Safari: en iPhone solo Safari puede instalar apps.</p>';
+            } else if (/android/i.test(navigator.userAgent)) {
+                html = '<p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Android (Chrome)</p>'
+                    + step(1, 'Toca el menú <b>⋮</b> de Chrome, arriba a la derecha.')
+                    + step(2, 'Elige <b>Instalar app</b> o <b>Añadir a la pantalla de inicio</b>.')
+                    + step(3, 'Confirma con <b>Instalar</b>.');
+            } else {
+                html = '<p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Computador (Chrome o Edge)</p>'
+                    + step(1, 'Busca el ícono <b>Instalar</b> <i class="fa-solid fa-circle-down text-tagBlue"></i> al final de la barra de direcciones.')
+                    + step(2, 'O abre el menú <b>⋮</b> y elige <b>Instalar Control TAG Chile</b>.')
+                    + step(3, 'Se abrirá en su propia ventana y quedará en tu escritorio o menú de aplicaciones.');
+            }
+            document.getElementById('install-help').innerHTML = html;
+            openModal('modal-install');
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; updateInstallUI(); });
+        window.addEventListener('appinstalled', () => { deferredInstall = null; updateInstallUI(); closeModal('modal-install'); showToast('¡App instalada! Ábrela desde tu pantalla de inicio', false); });
+
+        // Si no están los archivos manifest.webmanifest / íconos junto al HTML, se genera uno al vuelo para poder instalar igual
+        function injectDynamicManifest() {
+            if (!/^https?:$/.test(location.protocol)) return;
+            const base = location.href.split('#')[0].split('?')[0];
+            const icon = (b64, sizes) => ({ src: 'data:image/png;base64,' + b64, sizes, type: 'image/png', purpose: 'any' });
+            const m = {
+                name: 'Control TAG Chile', short_name: 'TAG Deudas', start_url: base, scope: base.replace(/[^/]*$/, ''),
+                display: 'standalone', orientation: 'portrait', background_color: '#f8fafc', theme_color: '#003399', lang: 'es-CL',
+                icons: [icon('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', '192x192'), icon('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', '512x512')]
+            };
+            document.querySelectorAll('link[rel="manifest"]').forEach(l => l.remove());
+            const l = document.createElement('link');
+            l.rel = 'manifest';
+            l.href = 'data:application/manifest+json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(m))));
+            document.head.appendChild(l);
+            const ai = document.querySelector('link[rel="apple-touch-icon"]');
+            if (ai) ai.href = 'data:image/png;base64,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';
+        }
+
+        (function initPWA() {
+            updateInstallUI();
+            if (!/^https?:$/.test(location.protocol)) return;
+            fetch('manifest.webmanifest', { method: 'HEAD', cache: 'no-store' })
+                .then(r => { if (!r.ok) throw new Error('sin manifest'); })
+                .catch(injectDynamicManifest);
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+        })();
         setupToastSwipe();
     </script>
 </body>
